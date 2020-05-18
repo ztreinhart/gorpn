@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/c-bata/go-prompt"
 	"runtime"
 	"strconv"
@@ -37,7 +38,6 @@ func (r *RPEngine) RunREPL() {
 }
 
 func (r *RPEngine) EvalString(input string) float64 {
-	//TODO
 	input = strings.ToLower(strings.TrimSpace(input))
 	tokens := strings.Split(input, " ")
 	return r.Eval(tokens)
@@ -45,8 +45,9 @@ func (r *RPEngine) EvalString(input string) float64 {
 
 func (r *RPEngine) Eval(tokens []string) float64 {
 	for _, token := range tokens {
-		//fmt.Println(token)
+
 		val, err := strconv.ParseFloat(token, 64)
+
 		switch {
 		case err == nil:
 			r.stack.Push(val)
@@ -88,7 +89,6 @@ func (r *RPEngine) Eval(tokens []string) float64 {
 			//TODO
 
 		case token == "%":
-			//TODO: Doublecheck this...
 			op1 := int64(r.stack.Pop())
 			op2 := int64(r.stack.Pop())
 			r.stack.Push(float64(op2 % op1))
@@ -98,6 +98,9 @@ func (r *RPEngine) Eval(tokens []string) float64 {
 
 		case token == "--":
 			r.stack.Push(r.stack.Pop() - 1)
+
+		case token == "help":
+			fmt.Println("Help!")
 
 		case token == "exit":
 			runtime.Goexit()

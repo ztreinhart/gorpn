@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -12,8 +14,14 @@ func main() {
 	var engine RPEngine
 	engine.Init()
 
-	//If we're going into interactive mode
-	engine.InitREPL()
-	engine.RunREPL()
+	//If there are command line args, process them
+	if len(os.Args[1:]) > 0 {
+		argStr := strings.Join(os.Args[1:], " ")
+		fmt.Print(engine.EvalString(argStr))
+
+	} else { //Otherwise run the REPL
+		engine.InitREPL()
+		engine.RunREPL()
+	}
 
 }
