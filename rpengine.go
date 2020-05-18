@@ -1,21 +1,39 @@
 package main
 
 import (
+	"github.com/c-bata/go-prompt"
 	"runtime"
 	"strconv"
 	"strings"
 )
 
 type RPEngine struct {
-	stack  RPNStack
-	vars   map[string]float64
-	macros map[string]string
+	stack      RPNStack
+	vars       map[string]float64
+	macros     map[string]string
+	replPrefix string
+	replPrompt *prompt.Prompt
 }
 
 func (r *RPEngine) Init() {
 	r.stack.Init()
 	r.vars = make(map[string]float64)
 	r.macros = make(map[string]string)
+}
+
+func (r *RPEngine) InitREPL() {
+	r.replPrefix = "[]> "
+	r.replPrompt = prompt.New(
+		r.replExecutor,
+		r.replCompleter,
+		//prompt.OptionPrefix("[]> "),
+		prompt.OptionLivePrefix(r.changeReplPrefix),
+		prompt.OptionTitle("gorpn"),
+	)
+}
+
+func (r *RPEngine) RunREPL() {
+	r.replPrompt.Run()
 }
 
 func (r *RPEngine) EvalString(input string) float64 {
@@ -88,9 +106,26 @@ func (r *RPEngine) Eval(tokens []string) float64 {
 	return r.stack.Peek()
 }
 
-func (r *RPEngine) PromptExecutor(in string) {
+func (r *RPEngine) replExecutor(in string) {
 	r.EvalString(in)
 
-	LivePrefixState.LivePrefix = r.stack.AsHorizString() + "> "
-	LivePrefixState.IsEnable = true
+	r.replPrefix = r.stack.AsHorizString() + "> "
+	//LivePrefixState.IsEnable = true
+}
+
+func (r *RPEngine) replCompleter(d prompt.Document) []prompt.Suggest {
+	s := []prompt.Suggest{
+		{Text: "+", Description: "Addition"},
+		{Text: "-", Description: "Subtraction"},
+		{Text: "*", Description: "Multiplication"},
+		{Text: "/", Description: "Division"},
+		{Text: "cla", Description: "Clears stack and variables"},
+		{Text: "exit", Description: "Exits from the calculator"},
+	}
+	//return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
+	return prompt.FilterContains(s, d.GetWordBeforeCursor(), true)
+}
+
+func (r *RPEngine) changeReplPrefix() (string, bool) {
+	return r.replPrefix, true
 }
