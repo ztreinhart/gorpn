@@ -69,10 +69,6 @@ func (r *RPEngine) Eval(tokens []string) float64 {
 			r.clr()
 		case token == "clv":
 			r.clv()
-		case token == "!":
-			r.boolNot()
-		case token == "!=":
-			r.notEqual()
 		case token == "%":
 			r.mod()
 		case token == "++":
@@ -82,164 +78,125 @@ func (r *RPEngine) Eval(tokens []string) float64 {
 
 		//Bitwise Operators
 		case token == "&":
-			//TODO: Bitwise AND
-
+			r.bitwiseAND()
 		case token == "|":
-			//TODO: Bitwise OR
-
+			r.bitwiseOR()
 		case token == "^":
-			//TODO: Bitwise XOR
-
+			r.bitwiseXOR()
 		case token == "~":
-			//TODO: Bitwise NOT
-
+			r.bitwiseNOT()
 		case token == "<<":
-			//TODO: Bitwise shift left
-
+			r.bitwiseLeftShift()
 		case token == ">>":
-			//TODO: Bitwise shift right
 
 		//Boolean Operations
+		case token == "!":
+			r.boolNOT()
 		case token == "&&":
-			//TODO: Boolean AND
-
+			r.boolAND()
 		case token == "||":
-			//TODO: Boolean OR
-
+			r.boolOR()
 		case token == "^^":
-			//TODO: Boolean XOR
+			r.boolXOR()
 
 		//Comparison Operators
+		case token == "!=":
+			r.notEqual()
 		case token == "<":
-			//TODO: Less than
-
+			r.lessThan()
 		case token == "<=":
-			//TODO: Less than or equal to
-
+			r.lessThanEqualTo()
 		case token == "==":
-			//TODO: Equal to
-
+			r.equalTo()
 		case token == ">":
-			//TODO: Greater than
-
+			r.greaterThan()
 		case token == ">=":
-			//TODO: Greater than or equal to
+			r.greaterThanEqualTo()
 
 		//Trigonometric Functions
 		case token == "acos":
-			//TODO: Arc Cosine
-
+			r.acos()
 		case token == "asin":
-			//TODO: Arc Sine
-
+			r.asin()
 		case token == "atan":
-			//TODO: Arc Tangent
-
+			r.atan()
 		case token == "cos":
-			//TODO: Cosine
-
+			r.cos()
 		case token == "cosh":
-			//TODO: Hyberbolic Cosine
-
+			r.cosh()
 		case token == "sin":
-			//TODO: Sine
-
+			r.sin()
 		case token == "sinh":
-			//TODO: Hyberbolic Cosine
-
+			r.sinh()
 		case token == "tanh":
-			//TODO: Hyperbolic Tangent
+			r.tanh()
 
 		//Numeric Utilities
 		case token == "ceil":
-			//TODO: Ceiling
-
+			r.ceiling()
 		case token == "floor":
-			//TODO: Floor
-
+			r.floor()
 		case token == "round":
-			//TODO: Round
-
-		case token == "ip":
-			//TODO: Integer part
-
+			r.round()
+		case token == "integerPart":
+			r.integerPart()
 		case token == "fp":
-			//TODO: Floating part
-
+			r.floatingPart()
 		case token == "sign":
-			//TODO: Push -1, 0, 1 depending on the sign of the operand
-
+			r.sign()
 		case token == "abs":
-			//TODO: Absolute value
-
+			r.abs()
 		case token == "max":
-			//TODO: Max
-
+			r.max()
 		case token == "min":
-			//TODO: Min
+			r.min()
 
 		//Display Modes
 		case token == "hex":
-			//TODO: Switch display mode to hex
-
+			r.hexDisplay()
 		case token == "dec":
-			//TODO: Switch display mode to decimal (default)
-
+			r.decDisplay()
 		case token == "bin":
-			//TODO: Switch display mode to binary
-
+			r.binDisplay()
 		case token == "oct":
-			//TODO: Switch display mode to octal
+			r.octDisplay()
+		case token == "stack":
+			r.stackDisplay()
 
 		//Constants
 		case token == "e":
-			//TODO: Push e onto the stack
-
+			r.constE()
 		case token == "pi":
-			//TODO: Push pi onto the stack
-
+			r.constPi()
 		case token == "rand":
-			//TODO: Push a random integer onto the stack
+			r.random()
 
 		//Mathematic functions
 		case token == "exp":
-			//TODO: Exponentiation
-
+			r.exp()
 		case token == "fact":
-			//TODO: Factorial
-
+			r.factorial()
 		case token == "sqrt":
-			//TODO: Square root
-
+			r.sqrt()
 		case token == "ln":
-			//TODO: Natural log
-
+			r.naturalLog()
 		case token == "log":
-			//TODO: Logarithm (base 2 or base 10?)
-
+			r.log()
 		case token == "pow":
-			//TODO: Raise a number to a power
 
 		//Networking
 		case token == "hnl":
-			//TODO: Host to network long
-
+			r.hnl()
 		case token == "hns":
-			//TODO: Host to network short
-
+			r.hns()
 		case token == "nhl":
-			//TODO: Network to host long
-
+			r.nhl()
 		case token == "nhs":
-			//TODO: Network to host short
+			r.nhs()
 
 		//Stack Manipulation
 		case token == "pick":
 			r.pick()
-		case token == "repeat":
-			//TODO: Repeat an operation n times, e.g. 3 repeat +
-			i++
-			r.repeat(tokens[i])
 		case token == "depth":
 			r.depth()
 		case token == "drop":
@@ -254,14 +211,17 @@ func (r *RPEngine) Eval(tokens []string) float64 {
 			r.roll()
 		case token == "rolld":
 			r.rolld()
-		case token == "stack":
-			r.stackDisplay()
 		case token == "swap":
 			r.swap()
 
 		//Macros and Variables:
+		case token == "repeat":
+			i++
+			r.repeat(tokens[i])
+
 		case token == "macro":
-			//TODO: Defines a macro, e.g. 'macro kib 1024 *'
+			r.macro(tokens[i:])
+			i = len(tokens)
 
 		case token == "x=":
 			//TODO: Assigns a variable, e.g. '1024 x='
@@ -340,15 +300,6 @@ func (r *RPEngine) clv() {
 
 }
 
-func (r *RPEngine) boolNot() {
-	//TODO: Boolean NOT
-}
-
-func (r *RPEngine) notEqual() {
-	//TODO: Not equal to
-
-}
-
 func (r *RPEngine) mod() {
 	op1 := int64(r.stack.Pop())
 	op2 := int64(r.stack.Pop())
@@ -364,22 +315,267 @@ func (r *RPEngine) decrement() {
 }
 
 //Bitwise Operators
+func (r *RPEngine) bitwiseAND() {
+	//TODO: Bitwise AND
+
+}
+
+func (r *RPEngine) bitwiseOR() {
+	//TODO: Bitwise OR
+
+}
+
+func (r *RPEngine) bitwiseXOR() {
+	//TODO: Bitwise XOR
+
+}
+
+func (r *RPEngine) bitwiseNOT() {
+	//TODO: Bitwise NOT
+
+}
+
+func (r *RPEngine) bitwiseLeftShift() {
+	//TODO: Bitwise shift left
+
+}
+
+func (r *RPEngine) bitwiseRightShift() {
+	//TODO: Bitwise shift right
+
+}
 
 //Boolean Operators
+func (r *RPEngine) boolNOT() {
+	//TODO: Boolean NOT
+	arg1 := r.stack.Pop()
+	arg2 := r.stack.Pop()
+	r.stack.Push(float64(arg1 != arg2))
+}
+
+func (r *RPEngine) boolAND() {
+	//TODO: Boolean AND
+}
+
+func (r *RPEngine) boolOR() {
+	//TODO: Boolean OR
+}
+
+func (r *RPEngine) boolXOR() {
+	//TODO: Boolean XOR
+}
 
 //Comparison Operators
+func (r *RPEngine) notEqual() {
+	//TODO: Not equal to
+
+}
+
+func (r *RPEngine) lessThan() {
+	//TODO: Less than
+
+}
+
+func (r *RPEngine) lessThanEqualTo() {
+	//TODO: Less than or equal to
+
+}
+
+func (r *RPEngine) equalTo() {
+	//TODO: Equal to
+
+}
+
+func (r *RPEngine) greaterThan() {
+	//TODO: Greater than
+
+}
+
+func (r *RPEngine) greaterThanEqualTo() {
+	//TODO: Greater than or equal to
+
+}
 
 //Trig Functions
+func (r *RPEngine) acos() {
+	//TODO: Arc Cosine
+
+}
+
+func (r *RPEngine) asin() {
+	//TODO: Arc Sine
+
+}
+
+func (r *RPEngine) atan() {
+	//TODO: Arc Tangent
+
+}
+
+func (r *RPEngine) cos() {
+	//TODO: Cosine
+
+}
+
+func (r *RPEngine) cosh() {
+	//TODO: Hyberbolic Cosine
+
+}
+
+func (r *RPEngine) sin() {
+	//TODO: Sine
+
+}
+
+func (r *RPEngine) sinh() {
+	//TODO: Hyberbolic Cosine
+
+}
+
+func (r *RPEngine) tanh() {
+	//TODO: Hyperbolic Tangent
+
+}
 
 //Numeric Utilities
+func (r *RPEngine) ceiling() {
+	//TODO: Ceiling
+
+}
+
+func (r *RPEngine) floor() {
+	//TODO: Floor
+
+}
+
+func (r *RPEngine) round() {
+	//TODO: Round
+
+}
+
+func (r *RPEngine) integerPart() {
+	//TODO: Integer part
+
+}
+
+func (r *RPEngine) floatingPart() {
+	//TODO: Floating part
+
+}
+
+func (r *RPEngine) sign() {
+	//TODO: Push -1, 0, 1 depending on the sign of the operand
+
+}
+
+func (r *RPEngine) abs() {
+	//TODO: Absolute value
+
+}
+
+func (r *RPEngine) max() {
+	//TODO: Max
+
+}
+
+func (r *RPEngine) min() {
+	//TODO: Min
+
+}
 
 //Display Modes
+func (r *RPEngine) stackDisplay() {
+	//TODO: Toggles the stack display from horizontal to vertical
+
+}
+
+func (r *RPEngine) hexDisplay() {
+	//TODO: Switch display mode to hex
+
+}
+
+func (r *RPEngine) decDisplay() {
+	//TODO: Switch display mode to decimal (default)
+
+}
+
+func (r *RPEngine) binDisplay() {
+	//TODO: Switch display mode to binary
+
+}
+
+func (r *RPEngine) octDisplay() {
+	//TODO: Switch display mode to octal
+
+}
 
 //Constants
+func (r *RPEngine) constE() {
+	//TODO: Push e onto the stack
+
+}
+
+func (r *RPEngine) constPi() {
+	//TODO: Push pi onto the stack
+
+}
+
+func (r *RPEngine) random() {
+	//TODO: Push a random integer onto the stack
+
+}
 
 //Mathematic functions
+func (r *RPEngine) exp() {
+	//TODO: Exponentiation
+
+}
+
+func (r *RPEngine) factorial() {
+	//TODO: Factorial
+
+}
+
+func (r *RPEngine) sqrt() {
+	//TODO: Square root
+
+}
+
+func (r *RPEngine) naturalLog() {
+	//TODO: Natural log
+
+}
+
+func (r *RPEngine) log() {
+	//TODO: Logarithm (base 2 or base 10?)
+
+}
+
+func (r *RPEngine) pow() {
+	//TODO: Raise a number to a power
+
+}
 
 //Networking
+func (r *RPEngine) hnl() {
+	//TODO: Host to network long
+
+}
+
+func (r *RPEngine) hns() {
+	//TODO: Host to network short
+
+}
+
+func (r *RPEngine) nhl() {
+	//TODO: Network to host long
+
+}
+
+func (r *RPEngine) nhs() {
+	//TODO: Network to host short
+
+}
 
 //Stack Manipulation
 func (r *RPEngine) pick() {
@@ -387,59 +583,50 @@ func (r *RPEngine) pick() {
 	r.stack.Push(r.stack.Pick(n))
 }
 
+func (r *RPEngine) depth() {
+	r.stack.Push(float64(r.stack.Depth()))
+}
+
+func (r *RPEngine) drop() {
+	r.stack.Drop()
+}
+
+func (r *RPEngine) dropn() {
+	n := int(r.stack.Pop())
+	r.stack.Dropn(n)
+}
+
+func (r *RPEngine) dup() {
+	r.stack.Dup()
+}
+
+func (r *RPEngine) dupn() {
+	n := int(r.stack.Pop())
+	r.stack.Dupn(n)
+}
+
+func (r *RPEngine) roll() {
+	n := int(r.stack.Pop())
+	r.stack.Roll(n)
+}
+
+func (r *RPEngine) rolld() {
+	n := int(r.stack.Pop())
+	r.stack.Rolld(n)
+}
+
+func (r *RPEngine) swap() {
+	r.stack.Swap()
+}
+
+//Macros and variables
 func (r *RPEngine) repeat(op string) {
-	//TODO: Repeat an operation n times, e.g. 3 repeat +
 	n := int(r.stack.Pop())
 	for i := 0; i < n; i++ {
 		r.Eval([]string{op})
 	}
 }
 
-func (r *RPEngine) depth() {
-	r.stack.Push(float64(r.stack.Depth()))
-}
-
-func (r *RPEngine) drop() {
-	_ = r.stack.Pop()
-}
-
-func (r *RPEngine) dropn() {
-	//TODO: Drop n items from the stack
-	r.repeat("drop")
-}
-
-func (r *RPEngine) dup() {
-	r.stack.Push(r.stack.Peek())
-}
-
-func (r *RPEngine) dupn() {
-	//TODO: Duplicates the top n stack items in order
-	n := int(r.stack.Pop())
-	r.stack.Dupn(n)
-}
-
-func (r *RPEngine) roll() {
-	//TODO: Roll the stack upwards by n
+func (r *RPEngine) macro(ops []string) {
 
 }
-
-func (r *RPEngine) rolld() {
-	//TODO: Roll the stack downwards by n
-
-}
-
-func (r *RPEngine) stackDisplay() {
-	//TODO: Toggles the stack display from horizontal to vertical
-
-}
-
-func (r *RPEngine) swap() {
-	//TODO: Swap the top 2 stack items
-	first := r.stack.Pop()
-	second := r.stack.Pop()
-	r.stack.Push(first)
-	r.stack.Push(second)
-
-}
-
-//Macros and variables
