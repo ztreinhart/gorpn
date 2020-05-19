@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 type RPNStack struct {
 	stack []float64
@@ -28,6 +31,25 @@ func (s *RPNStack) Peek() float64 {
 	} else {
 		return 0
 	}
+}
+func (s *RPNStack) Pick(n int) float64 {
+	pos := len(s.stack) - 1 - n
+	if pos >= 0 {
+		val := s.stack[pos]
+		s.stack = append(s.stack[:n], s.stack[n+1]) //TODO: double check this...
+		return val
+	} else {
+		return math.NaN()
+	}
+}
+
+func (s *RPNStack) Depth() int {
+	return len(s.stack)
+}
+
+func (s *RPNStack) Dupn(n int) {
+	pos := len(s.stack) - 1 - n
+	s.stack = append(s.stack, s.stack[pos:]...)
 }
 
 func (s *RPNStack) AsHorizString() string {
