@@ -2,28 +2,28 @@ package main
 
 import (
 	"fmt"
-	"math"
 )
 
 type RPNStack struct {
-	stack []float64
+	//stack []float64
+	stack []interface{}
 }
 
 func (s *RPNStack) Init() {
-	s.stack = make([]float64, 0)
+	s.stack = make([]interface{}, 0)
 }
 
 func (s *RPNStack) Clear() {
 	s.Init()
 }
 
-func (s *RPNStack) Push(val float64) {
+func (s *RPNStack) Push(val interface{}) {
 	s.stack = append(s.stack, val)
 }
 
-func (s *RPNStack) Pop() float64 { //Returns NaN if stack empty
+func (s *RPNStack) Pop() interface{} { //Returns nil if stack empty
 	if len(s.stack) < 1 {
-		return math.NaN()
+		return nil
 	}
 	end := len(s.stack) - 1
 	val := s.stack[end]
@@ -31,43 +31,43 @@ func (s *RPNStack) Pop() float64 { //Returns NaN if stack empty
 	return val
 }
 
-func (s *RPNStack) Peek() float64 { //Returns NaN if stack empty
+func (s *RPNStack) Peek() interface{} { //Returns nil if stack empty
 	end := len(s.stack) - 1
 	if end >= 0 {
 		return s.stack[end]
 	} else {
-		return math.NaN()
+		return nil
 	}
 }
 
-func (s *RPNStack) PushBottom(val float64) {
-	s.stack = append([]float64{val}, s.stack...)
+func (s *RPNStack) PushBottom(val interface{}) {
+	s.stack = append([]interface{}{val}, s.stack...)
 }
 
-func (s *RPNStack) PopBottom() float64 { //Returns NaN if stack empty
+func (s *RPNStack) PopBottom() interface{} { //Returns nil if stack empty
 	if len(s.stack) < 1 {
-		return math.NaN()
+		return nil
 	}
 	val := s.stack[0]
 	s.stack = s.stack[1:]
 	return val
 }
 
-func (s *RPNStack) PeekBottom() float64 { //Returns NaN if stack empty
+func (s *RPNStack) PeekBottom() interface{} { //Returns nil if stack empty
 	if len(s.stack) < 1 {
-		return math.NaN()
+		return nil
 	}
 	return s.stack[0]
 }
 
-func (s *RPNStack) Pick(n int) float64 { //Returns NaN if out of bounds
+func (s *RPNStack) Pick(n int) interface{} { //Returns NaN if out of bounds
 	pos := len(s.stack) - 1 - n
 	if pos >= 0 {
 		val := s.stack[pos]
 		s.stack = append(s.stack[:n], s.stack[n+1:]...)
 		return val
 	} else {
-		return math.NaN()
+		return nil
 	}
 }
 
