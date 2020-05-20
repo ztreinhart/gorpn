@@ -7,45 +7,45 @@ import (
 
 //Arithmetic Operators
 func (r *RPEngine) plus() {
-	raw1 := r.stack.Pop()
-	raw2 := r.stack.Pop()
-	switch op1 := raw1.(type) {
+	rawY := r.stack.Pop()
+	rawX := r.stack.Pop()
+	switch y := rawY.(type) {
 	case *big.Int:
-		switch op2 := raw2.(type) {
+		switch x := rawX.(type) {
 		case *big.Int:
-			op1 = op1.Add(op1, op2)
-			r.stack.Push(op1)
+			y = y.Add(y, x)
+			r.stack.Push(y)
 		case *big.Float:
-			flop1 := new(big.Float).SetInt(op1)
-			flop1 = flop1.Add(flop1, op2)
-			r.stack.Push(flop1)
+			fly := new(big.Float).SetInt(y)
+			fly = fly.Add(fly, x)
+			r.stack.Push(fly)
 		case bool:
 			fmt.Println("Operation undefined between integer and boolean.")
 		case nil:
 			fmt.Println("Operation undefined on nils")
 		}
 	case *big.Float:
-		switch op2 := raw2.(type) {
+		switch x := rawX.(type) {
 		case *big.Int:
-			flop2 := new(big.Float).SetInt(op2)
-			flop2 = flop2.Add(flop2, op1)
-			r.stack.Push(flop2)
+			flx := new(big.Float).SetInt(x)
+			flx = flx.Add(flx, y)
+			r.stack.Push(flx)
 		case *big.Float:
-			op1 = op1.Add(op1, op2)
-			r.stack.Push(op1)
+			y = y.Add(y, x)
+			r.stack.Push(y)
 		case bool:
 			fmt.Println("Operation undefined between float and boolean.")
 		case nil:
 			fmt.Println("Operation undefined on nils")
 		}
 	case bool:
-		switch op2 := raw2.(type) {
+		switch x := rawX.(type) {
 		case *big.Int:
 			fmt.Println("Operation undefined between boolean and integer")
 		case *big.Float:
 			fmt.Println("Operation undefined between boolean and float")
 		case bool:
-			r.stack.Push(op1 || op2)
+			r.stack.Push(y || x)
 		case nil:
 			fmt.Println("Operation undefined on nils")
 		}
@@ -55,39 +55,39 @@ func (r *RPEngine) plus() {
 }
 
 func (r *RPEngine) minus() {
-	raw1 := r.stack.Pop()
-	raw2 := r.stack.Pop()
-	switch op1 := raw1.(type) {
+	rawY := r.stack.Pop()
+	rawX := r.stack.Pop()
+	switch y := rawY.(type) {
 	case *big.Int:
-		switch op2 := raw2.(type) {
+		switch x := rawX.(type) {
 		case *big.Int:
-			op2 = op2.Sub(op2, op1)
-			r.stack.Push(op2)
+			x = x.Sub(x, y)
+			r.stack.Push(x)
 		case *big.Float:
-			flop1 := new(big.Float).SetInt(op1)
-			op2 = op2.Sub(op2, flop1)
-			r.stack.Push(op2)
+			fly := new(big.Float).SetInt(y)
+			x = x.Sub(x, fly)
+			r.stack.Push(x)
 		case bool:
 			fmt.Println("Operation undefined between integer and boolean.")
 		case nil:
 			fmt.Println("Operation undefined on nils")
 		}
 	case *big.Float:
-		switch op2 := raw2.(type) {
+		switch x := rawX.(type) {
 		case *big.Int:
-			flop2 := new(big.Float).SetInt(op2)
-			flop2 = flop2.Sub(flop2, op1)
-			r.stack.Push(flop2)
+			flx := new(big.Float).SetInt(x)
+			flx = flx.Sub(flx, y)
+			r.stack.Push(flx)
 		case *big.Float:
-			op2 = op2.Sub(op2, op1)
-			r.stack.Push(op2)
+			x = x.Sub(x, y)
+			r.stack.Push(x)
 		case bool:
 			fmt.Println("Operation undefined between float and boolean.")
 		case nil:
 			fmt.Println("Operation undefined on nils")
 		}
 	case bool:
-		switch raw2.(type) {
+		switch rawX.(type) {
 		case *big.Int:
 			fmt.Println("Operation undefined between boolean and integer")
 		case *big.Float:
@@ -103,45 +103,45 @@ func (r *RPEngine) minus() {
 }
 
 func (r *RPEngine) multiply() {
-	raw1 := r.stack.Pop()
-	raw2 := r.stack.Pop()
-	switch op1 := raw1.(type) {
+	rawY := r.stack.Pop()
+	rawX := r.stack.Pop()
+	switch y := rawY.(type) {
 	case *big.Int:
-		switch op2 := raw2.(type) {
+		switch x := rawX.(type) {
 		case *big.Int:
-			op1 = op1.Mul(op1, op2)
-			r.stack.Push(op1)
+			y = y.Mul(y, x)
+			r.stack.Push(y)
 		case *big.Float:
-			flop1 := new(big.Float).SetInt(op1)
-			flop1 = flop1.Mul(flop1, op2)
-			r.stack.Push(flop1)
+			fly := new(big.Float).SetInt(y)
+			fly = fly.Mul(fly, x)
+			r.stack.Push(fly)
 		case bool:
 			fmt.Println("Operation undefined between integer and boolean.")
 		case nil:
 			fmt.Println("Operation undefined on nils")
 		}
 	case *big.Float:
-		switch op2 := raw2.(type) {
+		switch x := rawX.(type) {
 		case *big.Int:
-			flop2 := new(big.Float).SetInt(op2)
-			flop2 = flop2.Mul(flop2, op1)
-			r.stack.Push(flop2)
+			flx := new(big.Float).SetInt(x)
+			flx = flx.Mul(flx, y)
+			r.stack.Push(flx)
 		case *big.Float:
-			op1 = op1.Mul(op1, op2)
-			r.stack.Push(op1)
+			y = y.Mul(y, x)
+			r.stack.Push(y)
 		case bool:
 			fmt.Println("Operation undefined between float and boolean.")
 		case nil:
 			fmt.Println("Operation undefined on nils")
 		}
 	case bool:
-		switch op2 := raw2.(type) {
+		switch x := rawX.(type) {
 		case *big.Int:
 			fmt.Println("Operation undefined between boolean and integer")
 		case *big.Float:
 			fmt.Println("Operation undefined between boolean and float")
 		case bool:
-			r.stack.Push(op1 && op2)
+			r.stack.Push(y && x)
 		case nil:
 			fmt.Println("Operation undefined on nils")
 		}
@@ -151,39 +151,39 @@ func (r *RPEngine) multiply() {
 }
 
 func (r *RPEngine) divide() {
-	raw1 := r.stack.Pop()
-	raw2 := r.stack.Pop()
-	switch op1 := raw1.(type) {
+	rawY := r.stack.Pop()
+	rawX := r.stack.Pop()
+	switch y := rawY.(type) {
 	case *big.Int:
-		switch op2 := raw2.(type) {
+		switch x := rawX.(type) {
 		case *big.Int:
-			op2 = op2.Div(op2, op1)
-			r.stack.Push(op2)
+			x = x.Div(x, y)
+			r.stack.Push(x)
 		case *big.Float:
-			flop1 := new(big.Float).SetInt(op1)
-			op2 = op2.Quo(op2, flop1)
-			r.stack.Push(op2)
+			fly := new(big.Float).SetInt(y)
+			x = x.Quo(x, fly)
+			r.stack.Push(x)
 		case bool:
 			fmt.Println("Operation undefined between integer and boolean.")
 		case nil:
 			fmt.Println("Operation undefined on nils")
 		}
 	case *big.Float:
-		switch op2 := raw2.(type) {
+		switch x := rawX.(type) {
 		case *big.Int:
-			flop2 := new(big.Float).SetInt(op2)
-			flop2 = flop2.Quo(flop2, op1)
-			r.stack.Push(flop2)
+			flx := new(big.Float).SetInt(x)
+			flx = flx.Quo(flx, y)
+			r.stack.Push(flx)
 		case *big.Float:
-			op2 = op2.Quo(op2, op1)
-			r.stack.Push(op2)
+			x = x.Quo(x, y)
+			r.stack.Push(x)
 		case bool:
 			fmt.Println("Operation undefined between float and boolean.")
 		case nil:
 			fmt.Println("Operation undefined on nils")
 		}
 	case bool:
-		switch raw2.(type) {
+		switch rawX.(type) {
 		case *big.Int:
 			fmt.Println("Operation undefined between boolean and integer")
 		case *big.Float:
@@ -213,20 +213,20 @@ func (r *RPEngine) clv() {
 }
 
 func (r *RPEngine) mod() {
-	raw1 := r.stack.Pop() //y
-	raw2 := r.stack.Pop() //x
-	switch op1 := raw1.(type) {
+	rawY := r.stack.Pop() //y
+	rawX := r.stack.Pop() //x
+	switch y := rawY.(type) {
 	case *big.Int:
-		switch op2 := raw2.(type) {
+		switch x := rawX.(type) {
 		case *big.Int:
-			if op1 == big.NewInt(0) {
+			if y == big.NewInt(0) {
 				fmt.Println("Undefined: Division by zero!")
 				return
 			}
-			op2 = op2.Mod(op2, op1)
+			x = x.Mod(x, y)
 		case *big.Float:
 			//TODO
-			intop2, _ := op2.Int(nil)
+			intx, _ := x.Int(nil)
 
 		case bool:
 			//TODO
@@ -234,7 +234,7 @@ func (r *RPEngine) mod() {
 			fmt.Println("Operation undefined on nils")
 		}
 	case *big.Float:
-		switch op2 := raw2.(type) {
+		switch x := rawX.(type) {
 		case *big.Int:
 			//TODO
 		case *big.Float:
@@ -245,7 +245,7 @@ func (r *RPEngine) mod() {
 			fmt.Println("Operation undefined on nils")
 		}
 	case bool:
-		switch op2 := raw2.(type) {
+		switch x := rawX.(type) {
 		case *big.Int:
 			//TODO
 		case *big.Float:
