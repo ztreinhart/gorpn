@@ -730,14 +730,30 @@ func (r *RPEngine) floatingPart() {
 
 //Native math/big.
 func (r *RPEngine) sign() {
-	//TODO: Push -1, 0, 1 depending on the sign of the operand
-
+	rawX := r.stack.Pop()
+	switch x := rawX.(type) {
+	case *big.Int:
+		r.stack.Push(big.NewInt(int64(x.Sign())))
+	case *big.Float:
+		r.stack.Push(big.NewInt(int64(x.Sign())))
+	default:
+		fmt.Printf("Operation undefined on type: %T\n ", rawX)
+		r.stack.Push(rawX)
+	}
 }
 
 //Native math/big.
 func (r *RPEngine) abs() {
-	//TODO: Absolute value
-
+	rawX := r.stack.Pop()
+	switch x := rawX.(type) {
+	case *big.Int:
+		r.stack.Push(x.Abs(x))
+	case *big.Float:
+		r.stack.Push(x.Abs(x))
+	default:
+		fmt.Printf("Operation undefined on type: %T\n ", rawX)
+		r.stack.Push(rawX)
+	}
 }
 
 //float64 precision
@@ -818,8 +834,16 @@ func (r *RPEngine) factorial() {
 
 //Native implementation in math/big. Arbitrary precision
 func (r *RPEngine) sqrt() {
-	//TODO: Square root
-
+	rawX := r.stack.Pop()
+	switch x := rawX.(type) {
+	case *big.Int:
+		r.stack.Push(x.Sqrt(x))
+	case *big.Float:
+		r.stack.Push(x.Sqrt(x))
+	default:
+		fmt.Printf("Operation undefined on type: %T\n ", rawX)
+		r.stack.Push(rawX)
+	}
 }
 
 //Currently only float64 precision due to use of math.Log()
@@ -950,5 +974,5 @@ func (r *RPEngine) repeat(op string) {
 }
 
 func (r *RPEngine) macro(ops []string) {
-
+	//TODO
 }
