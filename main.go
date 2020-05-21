@@ -14,6 +14,8 @@ func main() {
 	var engine RPEngine
 	engine.Init()
 
+	//TODO: process RC file, if it exists, on startup.
+
 	//If there are command line args, process them
 	if len(os.Args[1:]) > 0 {
 		argStr := strings.Join(os.Args[1:], " ")
