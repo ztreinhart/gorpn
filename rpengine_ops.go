@@ -1,13 +1,126 @@
 package main
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"math"
 	"math/big"
 	"math/rand"
 	"strconv"
+	"strings"
+	"unsafe"
 )
+
+//Helpers
+func compareHelper(rawX, rawY interface{}) (int, error) {
+	switch y := rawY.(type) {
+	case *big.Int: //Y is an integer
+		switch x := rawX.(type) {
+		case *big.Int: //Y is an integer, X is an integer
+			sign := x.Cmp(y)
+			return sign, nil
+		case *big.Float: //Y is an integer, X is a float
+			fly := new(big.Float).SetInt(y)
+			sign := x.Cmp(fly)
+			return sign, nil
+		default:
+			errstr := fmt.Sprintf("Operation undefined between %T and %T.", rawX, rawY)
+			return 0, errors.New(errstr)
+		}
+	case *big.Float: //Y is a float
+		switch x := rawX.(type) {
+		case *big.Int: //Y is a float, X is an integer
+			flx := new(big.Float).SetInt(x)
+			sign := flx.Cmp(y)
+			return sign, nil
+		case *big.Float: //Y is a float, X is a float
+			sign := x.Cmp(y)
+			return sign, nil
+		default:
+			errstr := fmt.Sprintf("Operation undefined between %T and %T.", rawX, rawY)
+			return 0, errors.New(errstr)
+		}
+	default:
+		errstr := fmt.Sprintf("Operation undefined between %T and %T.", rawX, rawY)
+		return 0, errors.New(errstr)
+	}
+}
+
+func (r *RPEngine) popInt64Helper() (int64, error) {
+	rawN := r.stack.Pop()
+	switch n := rawN.(type) {
+	case *big.Int:
+		return n.Int64(), nil
+	case *big.Float:
+		int64n, _ := n.Int64()
+		fmt.Println("Warning: implicit conversion of float to integer")
+		return int64n, nil
+	default:
+		fmt.Printf("Operands of type %T cannot be converted to integers.\n", rawN)
+		r.stack.Push(rawN)
+		return 0, errors.New("Wrong type.")
+	}
+}
+
+func (r *RPEngine) popIntHelper() (int, error) {
+	i, err := r.popInt64Helper()
+	return int(i), err
+}
+
+func (r *RPEngine) popUintHelper() (uint, error) {
+	i, err := r.popInt64Helper()
+	return uint(i), err
+}
+
+func (r *RPEngine) popUint16Helper() (uint16, error) {
+	i, err := r.popInt64Helper()
+	return uint16(i), err
+}
+
+func (r *RPEngine) popUint32Helper() (uint32, error) {
+	i, err := r.popInt64Helper()
+	return uint32(i), err
+}
+
+func (r *RPEngine) popFloatHelper() (float64, error) {
+	rawX := r.stack.Pop()
+	var floatx float64
+	switch x := rawX.(type) {
+	case *big.Int:
+		floatx, _ = strconv.ParseFloat(x.String(), 64)
+	case *big.Float:
+		floatx, _ = x.Float64()
+	default:
+		fmt.Printf("Operation undefined with operand of type %T\n", rawX)
+		return math.NaN(), errors.New("Unsupported type")
+	}
+	return floatx, nil
+}
+
+func (r *RPEngine) popBigIntHelper() (*big.Int, error) {
+	rawX := r.stack.Pop()
+	switch x := rawX.(type) {
+	case *big.Int:
+		return x, nil
+	case *big.Float:
+		fmt.Println("Implicit conversion to integer.")
+		intx, _ := x.Int(nil)
+		return intx, nil
+	default:
+		fmt.Printf("Operation undefined with operand of type %T\n", rawX)
+		return nil, errors.New("Unsupported type")
+	}
+}
+
+func (r *RPEngine) pushFloatOrInt(z *big.Float) {
+	if z.IsInt() {
+		zint, _ := z.Int(nil)
+		r.stack.Push(zint)
+	} else {
+		r.stack.Push(z)
+	}
+}
 
 //Arithmetic Operators
 func (r *RPEngine) plus() {
@@ -96,7 +209,7 @@ func (r *RPEngine) minus() {
 	r.stack.Push(rawY)
 }
 
-func (r *RPEngine) multiply() { //TODO: Add checks for division by zero
+func (r *RPEngine) multiply() {
 	rawY := r.stack.Pop()
 	rawX := r.stack.Pop()
 	switch y := rawY.(type) {
@@ -144,7 +257,7 @@ func (r *RPEngine) multiply() { //TODO: Add checks for division by zero
 	r.stack.Push(rawY)
 }
 
-func (r *RPEngine) divide() {
+func (r *RPEngine) divide() { //TODO: Add checks for division by zero
 	rawY := r.stack.Pop()
 	rawX := r.stack.Pop()
 	switch y := rawY.(type) {
@@ -197,7 +310,7 @@ func (r *RPEngine) clv() {
 
 }
 
-func (r *RPEngine) mod() {
+func (r *RPEngine) mod() { //TODO: probably change this to use QuoRem as opposed to Mod. Also big.Int helper.
 	rawY := r.stack.Pop() //y
 	rawX := r.stack.Pop() //x
 	switch y := rawY.(type) {
@@ -264,33 +377,51 @@ func (r *RPEngine) decrement() {
 
 //Bitwise Operators
 func (r *RPEngine) bitwiseAND() {
-	//TODO: Bitwise AND
+	y, erry := r.popBigIntHelper()
+	x, errx := r.popBigIntHelper()
+	if errx == nil && erry == nil {
+		r.stack.Push(new(big.Int).And(x, y))
+	}
 
 }
 
 func (r *RPEngine) bitwiseOR() {
-	//TODO: Bitwise OR
-
+	y, erry := r.popBigIntHelper()
+	x, errx := r.popBigIntHelper()
+	if errx == nil && erry == nil {
+		r.stack.Push(new(big.Int).Or(x, y))
+	}
 }
 
 func (r *RPEngine) bitwiseXOR() {
-	//TODO: Bitwise XOR
-
+	y, erry := r.popBigIntHelper()
+	x, errx := r.popBigIntHelper()
+	if errx == nil && erry == nil {
+		r.stack.Push(new(big.Int).Xor(x, y))
+	}
 }
 
 func (r *RPEngine) bitwiseNOT() {
-	//TODO: Bitwise NOT
-
+	x, errx := r.popBigIntHelper()
+	if errx == nil {
+		r.stack.Push(new(big.Int).Not(x))
+	}
 }
 
 func (r *RPEngine) bitwiseLeftShift() {
-	//TODO: Bitwise shift left
-
+	n, errn := r.popIntHelper()
+	x, errx := r.popBigIntHelper()
+	if errn == nil && errx == nil {
+		r.stack.Push(new(big.Int).Lsh(x, uint(n)))
+	}
 }
 
 func (r *RPEngine) bitwiseRightShift() {
-	//TODO: Bitwise shift right
-
+	n, errn := r.popIntHelper()
+	x, errx := r.popBigIntHelper()
+	if errn == nil && errx == nil {
+		r.stack.Push(new(big.Int).Rsh(x, uint(n)))
+	}
 }
 
 //Boolean Operators
@@ -363,40 +494,6 @@ func (r *RPEngine) boolXOR() {
 }
 
 //Comparison Operators
-func compareHelper(rawX, rawY interface{}) (int, error) {
-	switch y := rawY.(type) {
-	case *big.Int: //Y is an integer
-		switch x := rawX.(type) {
-		case *big.Int: //Y is an integer, X is an integer
-			sign := x.Cmp(y)
-			return sign, nil
-		case *big.Float: //Y is an integer, X is a float
-			fly := new(big.Float).SetInt(y)
-			sign := x.Cmp(fly)
-			return sign, nil
-		default:
-			errstr := fmt.Sprintf("Operation undefined between %T and %T.", rawX, rawY)
-			return 0, errors.New(errstr)
-		}
-	case *big.Float: //Y is a float
-		switch x := rawX.(type) {
-		case *big.Int: //Y is a float, X is an integer
-			flx := new(big.Float).SetInt(x)
-			sign := flx.Cmp(y)
-			return sign, nil
-		case *big.Float: //Y is a float, X is a float
-			sign := x.Cmp(y)
-			return sign, nil
-		default:
-			errstr := fmt.Sprintf("Operation undefined between %T and %T.", rawX, rawY)
-			return 0, errors.New(errstr)
-		}
-	default:
-		errstr := fmt.Sprintf("Operation undefined between %T and %T.", rawX, rawY)
-		return 0, errors.New(errstr)
-	}
-}
-
 func (r *RPEngine) notEqual() {
 	rawY := r.stack.Pop()
 	rawX := r.stack.Pop()
@@ -658,29 +755,6 @@ func (r *RPEngine) tanh() {
 }
 
 //Numeric Utilities
-func (r *RPEngine) popFloatHelper() (float64, error) {
-	rawX := r.stack.Pop()
-	var floatx float64
-	switch x := rawX.(type) {
-	case *big.Int:
-		floatx, _ = strconv.ParseFloat(x.String(), 64)
-	case *big.Float:
-		floatx, _ = x.Float64()
-	default:
-		fmt.Printf("Operation undefined with operand of type %T\n", rawX)
-		return math.NaN(), errors.New("Unsupported type")
-	}
-	return floatx, nil
-}
-
-func (r *RPEngine) pushFloatOrInt(z *big.Float) {
-	if z.IsInt() {
-		zint, _ := z.Int(nil)
-		r.stack.Push(zint)
-	} else {
-		r.stack.Push(z)
-	}
-}
 
 //float64 precision
 func (r *RPEngine) ceiling() {
@@ -828,8 +902,10 @@ func (r *RPEngine) exp() {
 
 //Native implementation in math/big. Arbitrary precision
 func (r *RPEngine) factorial() {
-	//TODO: Factorial
-
+	x, err := r.popInt64Helper()
+	if err == nil {
+		r.stack.Push(new(big.Int).MulRange(1, x))
+	}
 }
 
 //Native implementation in math/big. Arbitrary precision
@@ -875,43 +951,63 @@ func (r *RPEngine) pow() {
 }
 
 //Networking
+//Takes value from top of stack as little-endian uint32,
+//pushes a big-endian uint32 back on the stack
 func (r *RPEngine) hnl() {
-	//TODO: Host to network long
-
+	rawX := r.stack.Peek()
+	x, err := r.popUint32Helper()
+	if err == nil {
+		buf := (*[4]byte)(unsafe.Pointer(&x))[:]
+		nl := binary.BigEndian.Uint32(buf)
+		r.stack.Push(big.NewInt(int64(nl)))
+		return
+	}
+	r.stack.Push(rawX)
 }
 
+//Takes value from top of stack as little-endian uint16,
+//pushes a big-endian uint16 back on the stack
 func (r *RPEngine) hns() {
-	//TODO: Host to network short
-
+	rawX := r.stack.Peek()
+	x, err := r.popUint16Helper()
+	if err == nil {
+		buf := (*[2]byte)(unsafe.Pointer(&x))[:]
+		ns := binary.BigEndian.Uint16(buf)
+		r.stack.Push(big.NewInt(int64(ns)))
+		return
+	}
+	r.stack.Push(rawX)
 }
 
+//Takes value from top of stack as big-endian uint32,
+//pushes a little-endian uint32 back on the stack
 func (r *RPEngine) nhl() {
-	//TODO: Network to host long
-
+	rawX := r.stack.Peek()
+	x, err := r.popUint32Helper()
+	if err == nil {
+		buf := (*[4]byte)(unsafe.Pointer(&x))[:]
+		hl := binary.LittleEndian.Uint32(buf)
+		r.stack.Push(big.NewInt(int64(hl)))
+		return
+	}
+	r.stack.Push(rawX)
 }
 
+//Takes value from top of stack as big-endian uint16,
+//pushes a little-endian uint16 back on the stack
 func (r *RPEngine) nhs() {
-	//TODO: Network to host short
-
+	rawX := r.stack.Peek()
+	x, err := r.popUint16Helper()
+	if err == nil {
+		buf := (*[2]byte)(unsafe.Pointer(&x))[:]
+		hs := binary.BigEndian.Uint16(buf)
+		r.stack.Push(big.NewInt(int64(hs)))
+		return
+	}
+	r.stack.Push(rawX)
 }
 
 //Stack Manipulation
-func (r *RPEngine) popIntHelper() (int, error) {
-	rawN := r.stack.Pop()
-	switch n := rawN.(type) {
-	case *big.Int:
-		return int(n.Int64()), nil
-	case *big.Float:
-		int64n, _ := n.Int64()
-		fmt.Println("Warning: using float value as integer index or counter.")
-		return int(int64n), nil
-	default:
-		fmt.Printf("Operands of type %T cannot be used as integer stack indices or counters.\n", rawN)
-		r.stack.Push(rawN)
-		return -1, errors.New("Wrong type.")
-	}
-}
-
 func (r *RPEngine) pick() {
 	n, err := r.popIntHelper()
 	if err == nil {
@@ -973,6 +1069,20 @@ func (r *RPEngine) repeat(op string) {
 	}
 }
 
-func (r *RPEngine) macro(ops []string) {
-	//TODO
+func (r *RPEngine) setMacro(ops []string) {
+	r.macros[ops[0]] = strings.Join(ops[1:], " ")
+
+}
+
+func (r *RPEngine) runMacro(key string) {
+	r.Eval(strings.Split(r.macros[key], " "))
+}
+
+func (r *RPEngine) setVar(token string) {
+	varName := string([]rune(token)[0])
+	r.vars[varName] = r.stack.Pop()
+}
+
+func (r *RPEngine) getVar(key string) {
+	r.stack.Push(r.vars[key])
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/c-bata/go-prompt"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -14,12 +15,16 @@ type RPEngine struct {
 	macros     map[string]string
 	replPrefix string
 	replPrompt *prompt.Prompt
+	regex      map[string]*regexp.Regexp
 }
 
 func (r *RPEngine) Init() {
 	r.stack.Init()
 	r.vars = make(map[string]interface{})
 	r.macros = make(map[string]string)
+
+	r.regex = make(map[string]*regexp.Regexp)
+	r.regex["setvar"] = regexp.MustCompile("[a-z]=")
 }
 
 func (r *RPEngine) InitREPL() {
@@ -40,14 +45,31 @@ func (r *RPEngine) RunREPL() {
 func (r *RPEngine) EvalString(input string) float64 {
 	input = strings.ToLower(strings.TrimSpace(input))
 	tokens := strings.Split(input, " ")
-	return r.Eval(tokens)
+	r.Eval(tokens)
+	//TODO
+	return 0
 }
 
-func (r *RPEngine) Eval(tokens []string) float64 {
+func (r *RPEngine) Eval(tokens []string) {
 	//for _, token := range tokens {
 	for i := 0; i < len(tokens); i++ {
 		token := tokens[i]
 
+		//Handle boolean literal tokens
+		switch token {
+		case "true", "t":
+			r.stack.Push("true")
+			break
+		case "false", "f":
+			r.stack.Push("false")
+			break
+		}
+
+		//Handle integer literal tokens
+		//TODO
+
+		//Handle float literal tokens
+		//TODO
 		val, err := strconv.ParseFloat(token, 64)
 
 		switch {
@@ -218,23 +240,23 @@ func (r *RPEngine) Eval(tokens []string) float64 {
 		case token == "repeat":
 			i++
 			r.repeat(tokens[i])
-
+		case r.regex["setvar"].MatchString(token):
+			r.setVar(token)
 		case token == "macro":
-			r.macro(tokens[i:])
+			r.setMacro(tokens[i:])
 			i = len(tokens)
-
-		case token == "x=":
-			//TODO: Assigns a variable, e.g. '1024 x='
+		case r.varFound(token):
+			r.getVar(token)
+		case r.macroFound(token):
+			r.runMacro(token)
 
 		//Other operations
 		case token == "help":
 			fmt.Println("Help!")
-
 		case token == "exit":
 			runtime.Goexit()
 		}
 	}
-	return r.stack.Peek()
 }
 
 func (r *RPEngine) replExecutor(in string) {
@@ -259,4 +281,14 @@ func (r *RPEngine) replCompleter(d prompt.Document) []prompt.Suggest {
 
 func (r *RPEngine) changeReplPrefix() (string, bool) {
 	return r.replPrefix, true
+}
+
+func (r *RPEngine) varFound(key string) bool {
+	_, ok := r.vars[key]
+	return ok
+}
+
+func (r *RPEngine) macroFound(key string) bool {
+	_, ok := r.macros[key]
+	return ok
 }

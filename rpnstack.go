@@ -4,8 +4,9 @@ import (
 	"fmt"
 )
 
+//TODO: Consider switching all 'n' arguments to uint.
+
 type RPNStack struct {
-	//stack []float64
 	stack []interface{}
 }
 
