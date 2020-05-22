@@ -10,13 +10,13 @@ import (
 )
 
 type RPEngine struct {
-	stack       RPNStack
-	vars        map[string]interface{}
-	macros      map[string]string
-	replPrefix  string
-	replPrompt  *prompt.Prompt
-	regex       map[string]*regexp.Regexp
-	precision   uint
+	stack      RPNStack
+	vars       map[string]interface{}
+	macros     map[string]string
+	replPrefix string
+	replPrompt *prompt.Prompt
+	regex      map[string]*regexp.Regexp
+	//precision   uint
 	helpCalled  bool
 	displayBase int
 	stackDisp   string
@@ -29,7 +29,7 @@ func (r *RPEngine) Init() {
 
 	r.regex = make(map[string]*regexp.Regexp)
 	r.regex["setvar"] = regexp.MustCompile("[a-z]=")
-	r.precision = 128
+	//r.precision = 128
 	r.helpCalled = false
 	r.displayBase = 10
 	r.stackDisp = "horiz"
@@ -54,7 +54,7 @@ func (r *RPEngine) EvalString(input string) string {
 	input = strings.ToLower(strings.TrimSpace(input))
 	tokens := strings.Split(input, " ")
 	r.Eval(tokens)
-	//TODO: Figure out how to handle output
+
 	if r.helpCalled {
 		return ""
 	}
@@ -74,10 +74,10 @@ func (r *RPEngine) Eval(tokens []string) {
 		switch token {
 		case "true", "t":
 			literalFound = true
-			literal = "true"
+			literal = true
 		case "false", "f":
 			literalFound = true
-			literal = "true"
+			literal = false
 		}
 
 		//Handle integer literal tokens
@@ -88,7 +88,7 @@ func (r *RPEngine) Eval(tokens []string) {
 		//Handle float literal tokens
 		if !literalFound {
 			literal, literalFound = new(big.Float).SetString(token)
-			literal.(*big.Float).SetPrec(r.precision)
+			//literal.(*big.Float).SetPrec(r.precision)
 		}
 
 		//Main parsing tree
@@ -205,14 +205,6 @@ func (r *RPEngine) Eval(tokens []string) {
 			r.octDisplay()
 		case token == "Stack":
 			r.stackDisplay()
-		case token == "setprec":
-			r.setPrec()
-		case token == "getprec":
-			r.getPrec()
-		case token == "setdefprec":
-			r.setDefPrec()
-		case token == "getdefprec":
-			r.getDefPrec()
 
 		//Constants
 		case token == "e":
@@ -274,6 +266,8 @@ func (r *RPEngine) Eval(tokens []string) {
 		case token == "macro":
 			r.setMacro(tokens[i:])
 			i = len(tokens)
+		case token == "lsmacros":
+			r.listMacros()
 		case r.varFound(token):
 			r.getVar(token)
 		case r.macroFound(token):
@@ -285,6 +279,10 @@ func (r *RPEngine) Eval(tokens []string) {
 			r.helpCalled = true
 		case token == "exit":
 			runtime.Goexit()
+		case token == "quit":
+			runtime.Goexit()
+		case token == "type":
+			fmt.Printf("Type: %T\n", r.stack.Peek())
 		}
 	}
 }
@@ -292,21 +290,9 @@ func (r *RPEngine) Eval(tokens []string) {
 func (r *RPEngine) replExecutor(in string) {
 	r.EvalString(in)
 	//TODO: Updated display logic.
-	r.replPrefix = r.stack.AsHorizString() + "> "
+	//r.replPrefix = r.stack.AsHorizString() + "> "
+	r.replPrefix = r.buildREPLPrefix()
 	//LivePrefixState.IsEnable = true
-}
-
-func (r *RPEngine) replCompleter(d prompt.Document) []prompt.Suggest {
-	s := []prompt.Suggest{
-		{Text: "+", Description: "Addition"},
-		{Text: "-", Description: "Subtraction"},
-		{Text: "*", Description: "Multiplication"},
-		{Text: "/", Description: "Division"},
-		{Text: "cla", Description: "Clears Stack and variables"},
-		{Text: "exit", Description: "Exits from the calculator"},
-	}
-	//return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
-	return prompt.FilterContains(s, d.GetWordBeforeCursor(), true)
 }
 
 func (r *RPEngine) changeReplPrefix() (string, bool) {
@@ -343,12 +329,44 @@ func (r *RPEngine) valString(val interface{}) string {
 
 func (r *RPEngine) stackString() string {
 	var b strings.Builder
-	for _, val := range r.stack.Stack {
-		if r.stackDisp == "vert" {
-			_, _ = fmt.Fprint(&b, r.valString(val), "\n")
-		} else {
-			//TODO
+	if r.stackDisp == "vert" {
+		for i := len(r.stack.Stack) - 1; i >= 0; i-- {
+			_, _ = fmt.Fprint(&b, r.valString(r.stack.Stack[i]), "\n")
 		}
+	} else {
+		for idx, val := range r.stack.Stack {
+			_, _ = fmt.Fprint(&b, val, "")
+			if idx < len(r.stack.Stack)-1 {
+				_, _ = fmt.Fprint(&b, " ")
+			}
+		}
+	}
+
+	return b.String()
+}
+
+func (r *RPEngine) varsString() string {
+	if len(r.vars) > 0 {
+		var b strings.Builder
+		_, _ = fmt.Fprint(&b, "[variables: ")
+		for key, value := range r.vars {
+			_, _ = fmt.Fprint(&b, key, "=", r.valString(value), " ")
+		}
+		_, _ = fmt.Fprint(&b, "]")
+		return b.String()
+	}
+	return ""
+}
+
+func (r *RPEngine) buildREPLPrefix() string {
+	var b strings.Builder
+	if r.stackDisp == "vert" {
+		_, _ = fmt.Fprint(&b, r.stackString())
+		_, _ = fmt.Fprint(&b, r.varsString())
+		_, _ = fmt.Fprint(&b, " >")
+	} else {
+		_, _ = fmt.Fprint(&b, r.varsString())
+		_, _ = fmt.Fprint(&b, "[ ", r.stackString(), " ] > ")
 	}
 	return b.String()
 }

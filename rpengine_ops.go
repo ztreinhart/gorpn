@@ -12,6 +12,8 @@ import (
 	"unsafe"
 )
 
+//TODO: DO NOT REUSE big.Int AND big.Float pointers!
+
 //Helpers
 func compareHelper(rawX, rawY interface{}) (int, error) {
 	switch y := rawY.(type) {
@@ -46,6 +48,8 @@ func compareHelper(rawX, rawY interface{}) (int, error) {
 		return 0, errors.New(errstr)
 	}
 }
+
+//TODO: func (r *RPEngine) popFloat64Helper() (float64, error) {}
 
 func (r *RPEngine) popInt64Helper() (int64, error) {
 	rawN := r.stack.Pop()
@@ -852,69 +856,33 @@ func (r *RPEngine) min() {
 
 //Display Modes
 func (r *RPEngine) hexDisplay() {
-	//TODO: Switch display mode to hex (base 16)
+	r.displayBase = 16
 
 }
 
 func (r *RPEngine) decDisplay() {
-	//TODO: Switch display mode to decimal (default) (base 10)
+	r.displayBase = 10
 
 }
 
 func (r *RPEngine) binDisplay() {
-	//TODO: Switch display mode to binary (base 2)
+	r.displayBase = 2
 
 }
 
 func (r *RPEngine) octDisplay() {
-	//TODO: Switch display mode to octal (base 8)
+	r.displayBase = 8
 
 }
 
 func (r *RPEngine) stackDisplay() {
-	//TODO: Toggles the Stack display from horizontal to vertical
-
-}
-
-func (r *RPEngine) setPrec() {
-	rawN := r.stack.Peek()
-	n, err := r.popUintHelper()
-	if err == nil {
-		rawX := r.stack.Pop()
-		switch x := rawX.(type) {
-		case *big.Float:
-			x.SetPrec(n)
-			r.stack.Push(x)
-			return
-		default:
-			fmt.Printf("Operation not defined on type %T.\n", rawX)
-			r.stack.Push(rawX)
-		}
+	switch r.stackDisp {
+	case "vert":
+		r.stackDisp = "horiz"
+	case "horiz":
+		r.stackDisp = "vert"
 	}
-	r.stack.Push(rawN)
-}
 
-func (r *RPEngine) getPrec() {
-	rawX := r.stack.Peek()
-	switch x := rawX.(type) {
-	case *big.Float:
-		r.stack.Push(big.NewInt(int64(x.Prec())))
-		return
-	default:
-		fmt.Printf("Operation not defined on type %T.\n", rawX)
-		r.stack.Push(rawX)
-	}
-}
-
-func (r *RPEngine) setDefPrec() {
-	prec, err := r.popUintHelper()
-	if err == nil {
-		r.precision = prec
-	}
-}
-
-func (r *RPEngine) getDefPrec() {
-	r.stack.Push(big.NewInt(int64(r.precision)))
 }
 
 //Constants
@@ -1065,6 +1033,7 @@ func (r *RPEngine) drop() {
 }
 
 func (r *RPEngine) dropn() {
+	//TODO: doesn't work
 	n, err := r.popIntHelper()
 	if err == nil {
 		r.stack.Dropn(n)
@@ -1111,8 +1080,15 @@ func (r *RPEngine) repeat(op string) {
 }
 
 func (r *RPEngine) setMacro(ops []string) {
-	r.macros[ops[0]] = strings.Join(ops[1:], " ")
+	r.macros[ops[1]] = strings.Join(ops[2:], " ")
 
+}
+
+func (r *RPEngine) listMacros() {
+	fmt.Println("Currently defined macros: ")
+	for key, value := range r.macros {
+		fmt.Println(key, ":\t", value)
+	}
 }
 
 func (r *RPEngine) runMacro(key string) {
