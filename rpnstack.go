@@ -7,11 +7,11 @@ import (
 //TODO: Consider switching all 'n' arguments to uint.
 
 type RPNStack struct {
-	stack []interface{}
+	Stack []interface{}
 }
 
 func (s *RPNStack) Init() {
-	s.stack = make([]interface{}, 0)
+	s.Stack = make([]interface{}, 0)
 }
 
 func (s *RPNStack) Clear() {
@@ -19,53 +19,53 @@ func (s *RPNStack) Clear() {
 }
 
 func (s *RPNStack) Push(val interface{}) {
-	s.stack = append(s.stack, val)
+	s.Stack = append(s.Stack, val)
 }
 
-func (s *RPNStack) Pop() interface{} { //Returns nil if stack empty
-	if len(s.stack) < 1 {
+func (s *RPNStack) Pop() interface{} { //Returns nil if Stack empty
+	if len(s.Stack) < 1 {
 		return nil
 	}
-	end := len(s.stack) - 1
-	val := s.stack[end]
-	s.stack = s.stack[:end]
+	end := len(s.Stack) - 1
+	val := s.Stack[end]
+	s.Stack = s.Stack[:end]
 	return val
 }
 
-func (s *RPNStack) Peek() interface{} { //Returns nil if stack empty
-	end := len(s.stack) - 1
+func (s *RPNStack) Peek() interface{} { //Returns nil if Stack empty
+	end := len(s.Stack) - 1
 	if end >= 0 {
-		return s.stack[end]
+		return s.Stack[end]
 	} else {
 		return nil
 	}
 }
 
 func (s *RPNStack) PushBottom(val interface{}) {
-	s.stack = append([]interface{}{val}, s.stack...)
+	s.Stack = append([]interface{}{val}, s.Stack...)
 }
 
-func (s *RPNStack) PopBottom() interface{} { //Returns nil if stack empty
-	if len(s.stack) < 1 {
+func (s *RPNStack) PopBottom() interface{} { //Returns nil if Stack empty
+	if len(s.Stack) < 1 {
 		return nil
 	}
-	val := s.stack[0]
-	s.stack = s.stack[1:]
+	val := s.Stack[0]
+	s.Stack = s.Stack[1:]
 	return val
 }
 
-func (s *RPNStack) PeekBottom() interface{} { //Returns nil if stack empty
-	if len(s.stack) < 1 {
+func (s *RPNStack) PeekBottom() interface{} { //Returns nil if Stack empty
+	if len(s.Stack) < 1 {
 		return nil
 	}
-	return s.stack[0]
+	return s.Stack[0]
 }
 
 func (s *RPNStack) Pick(n int) interface{} { //Returns NaN if out of bounds
-	pos := len(s.stack) - 1 - n
+	pos := len(s.Stack) - 1 - n
 	if pos >= 0 {
-		val := s.stack[pos]
-		s.stack = append(s.stack[:n], s.stack[n+1:]...)
+		val := s.Stack[pos]
+		s.Stack = append(s.Stack[:n], s.Stack[n+1:]...)
 		return val
 	} else {
 		return nil
@@ -73,22 +73,22 @@ func (s *RPNStack) Pick(n int) interface{} { //Returns NaN if out of bounds
 }
 
 func (s *RPNStack) Depth() int {
-	return len(s.stack)
+	return len(s.Stack)
 }
 func (s *RPNStack) Drop() {
-	if len(s.stack) > 0 {
+	if len(s.Stack) > 0 {
 		_ = s.Pop()
 	}
 }
 
 func (s *RPNStack) DropBottom() {
-	if len(s.stack) > 0 {
+	if len(s.Stack) > 0 {
 		_ = s.PopBottom()
 	}
 }
 
 func (s *RPNStack) Dropn(n int) {
-	if n >= len(s.stack) {
+	if n >= len(s.Stack) {
 		s.Clear()
 		return
 	}
@@ -98,7 +98,7 @@ func (s *RPNStack) Dropn(n int) {
 }
 
 func (s *RPNStack) DropBottomn(n int) {
-	if n >= len(s.stack) {
+	if n >= len(s.Stack) {
 		s.Clear()
 		return
 	}
@@ -108,20 +108,20 @@ func (s *RPNStack) DropBottomn(n int) {
 }
 
 func (s *RPNStack) Dup() {
-	if len(s.stack) > 0 {
+	if len(s.Stack) > 0 {
 		s.Push(s.Peek())
 	}
 }
 
-func (s *RPNStack) Dupn(n int) { //If n >= stack length, duplicates whole stack
+func (s *RPNStack) Dupn(n int) { //If n >= Stack length, duplicates whole Stack
 	if n <= 0 {
 		return
 	}
-	pos := len(s.stack) - 1 - n
+	pos := len(s.Stack) - 1 - n
 	if pos < 0 {
 		pos = 0
 	}
-	s.stack = append(s.stack, s.stack[pos:]...)
+	s.Stack = append(s.Stack, s.Stack[pos:]...)
 }
 
 func (s *RPNStack) Roll(n int) {
@@ -145,7 +145,7 @@ func (s *RPNStack) Rolld(n int) {
 }
 
 func (s *RPNStack) Swap() {
-	if len(s.stack) > 1 {
+	if len(s.Stack) > 1 {
 		first := s.Pop()
 		second := s.Pop()
 		s.Push(first)
@@ -154,5 +154,5 @@ func (s *RPNStack) Swap() {
 }
 
 func (s *RPNStack) AsHorizString() string {
-	return fmt.Sprintf("%v", s.stack)
+	return fmt.Sprintf("%v", s.Stack)
 }

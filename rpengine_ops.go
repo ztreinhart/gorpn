@@ -851,29 +851,70 @@ func (r *RPEngine) min() {
 }
 
 //Display Modes
-func (r *RPEngine) stackDisplay() {
-	//TODO: Toggles the stack display from horizontal to vertical
-
-}
-
 func (r *RPEngine) hexDisplay() {
-	//TODO: Switch display mode to hex
+	//TODO: Switch display mode to hex (base 16)
 
 }
 
 func (r *RPEngine) decDisplay() {
-	//TODO: Switch display mode to decimal (default)
+	//TODO: Switch display mode to decimal (default) (base 10)
 
 }
 
 func (r *RPEngine) binDisplay() {
-	//TODO: Switch display mode to binary
+	//TODO: Switch display mode to binary (base 2)
 
 }
 
 func (r *RPEngine) octDisplay() {
-	//TODO: Switch display mode to octal
+	//TODO: Switch display mode to octal (base 8)
 
+}
+
+func (r *RPEngine) stackDisplay() {
+	//TODO: Toggles the Stack display from horizontal to vertical
+
+}
+
+func (r *RPEngine) setPrec() {
+	rawN := r.stack.Peek()
+	n, err := r.popUintHelper()
+	if err == nil {
+		rawX := r.stack.Pop()
+		switch x := rawX.(type) {
+		case *big.Float:
+			x.SetPrec(n)
+			r.stack.Push(x)
+			return
+		default:
+			fmt.Printf("Operation not defined on type %T.\n", rawX)
+			r.stack.Push(rawX)
+		}
+	}
+	r.stack.Push(rawN)
+}
+
+func (r *RPEngine) getPrec() {
+	rawX := r.stack.Peek()
+	switch x := rawX.(type) {
+	case *big.Float:
+		r.stack.Push(big.NewInt(int64(x.Prec())))
+		return
+	default:
+		fmt.Printf("Operation not defined on type %T.\n", rawX)
+		r.stack.Push(rawX)
+	}
+}
+
+func (r *RPEngine) setDefPrec() {
+	prec, err := r.popUintHelper()
+	if err == nil {
+		r.precision = prec
+	}
+}
+
+func (r *RPEngine) getDefPrec() {
+	r.stack.Push(big.NewInt(int64(r.precision)))
 }
 
 //Constants
@@ -951,8 +992,8 @@ func (r *RPEngine) pow() {
 }
 
 //Networking
-//Takes value from top of stack as little-endian uint32,
-//pushes a big-endian uint32 back on the stack
+//Takes value from top of Stack as little-endian uint32,
+//pushes a big-endian uint32 back on the Stack
 func (r *RPEngine) hnl() {
 	rawX := r.stack.Peek()
 	x, err := r.popUint32Helper()
@@ -965,8 +1006,8 @@ func (r *RPEngine) hnl() {
 	r.stack.Push(rawX)
 }
 
-//Takes value from top of stack as little-endian uint16,
-//pushes a big-endian uint16 back on the stack
+//Takes value from top of Stack as little-endian uint16,
+//pushes a big-endian uint16 back on the Stack
 func (r *RPEngine) hns() {
 	rawX := r.stack.Peek()
 	x, err := r.popUint16Helper()
@@ -979,8 +1020,8 @@ func (r *RPEngine) hns() {
 	r.stack.Push(rawX)
 }
 
-//Takes value from top of stack as big-endian uint32,
-//pushes a little-endian uint32 back on the stack
+//Takes value from top of Stack as big-endian uint32,
+//pushes a little-endian uint32 back on the Stack
 func (r *RPEngine) nhl() {
 	rawX := r.stack.Peek()
 	x, err := r.popUint32Helper()
@@ -993,8 +1034,8 @@ func (r *RPEngine) nhl() {
 	r.stack.Push(rawX)
 }
 
-//Takes value from top of stack as big-endian uint16,
-//pushes a little-endian uint16 back on the stack
+//Takes value from top of Stack as big-endian uint16,
+//pushes a little-endian uint16 back on the Stack
 func (r *RPEngine) nhs() {
 	rawX := r.stack.Peek()
 	x, err := r.popUint16Helper()

@@ -3,19 +3,23 @@ package main
 import (
 	"fmt"
 	"github.com/c-bata/go-prompt"
+	"math/big"
 	"regexp"
 	"runtime"
-	"strconv"
 	"strings"
 )
 
 type RPEngine struct {
-	stack      RPNStack
-	vars       map[string]interface{}
-	macros     map[string]string
-	replPrefix string
-	replPrompt *prompt.Prompt
-	regex      map[string]*regexp.Regexp
+	stack       RPNStack
+	vars        map[string]interface{}
+	macros      map[string]string
+	replPrefix  string
+	replPrompt  *prompt.Prompt
+	regex       map[string]*regexp.Regexp
+	precision   uint
+	helpCalled  bool
+	displayBase int
+	stackDisp   string
 }
 
 func (r *RPEngine) Init() {
@@ -25,6 +29,10 @@ func (r *RPEngine) Init() {
 
 	r.regex = make(map[string]*regexp.Regexp)
 	r.regex["setvar"] = regexp.MustCompile("[a-z]=")
+	r.precision = 128
+	r.helpCalled = false
+	r.displayBase = 10
+	r.stackDisp = "horiz"
 }
 
 func (r *RPEngine) InitREPL() {
@@ -42,39 +50,52 @@ func (r *RPEngine) RunREPL() {
 	r.replPrompt.Run()
 }
 
-func (r *RPEngine) EvalString(input string) float64 {
+func (r *RPEngine) EvalString(input string) string {
 	input = strings.ToLower(strings.TrimSpace(input))
 	tokens := strings.Split(input, " ")
 	r.Eval(tokens)
-	//TODO
-	return 0
+	//TODO: Figure out how to handle output
+	if r.helpCalled {
+		return ""
+	}
+	return r.valString(r.stack.Peek())
 }
 
 func (r *RPEngine) Eval(tokens []string) {
-	//for _, token := range tokens {
+	r.helpCalled = false
+
 	for i := 0; i < len(tokens); i++ {
 		token := tokens[i]
+
+		var literal interface{}
+		literalFound := false
 
 		//Handle boolean literal tokens
 		switch token {
 		case "true", "t":
-			r.stack.Push("true")
-			break
+			literalFound = true
+			literal = "true"
 		case "false", "f":
-			r.stack.Push("false")
-			break
+			literalFound = true
+			literal = "true"
 		}
 
 		//Handle integer literal tokens
-		//TODO
+		if !literalFound {
+			literal, literalFound = new(big.Int).SetString(token, 0)
+		}
 
 		//Handle float literal tokens
-		//TODO
-		val, err := strconv.ParseFloat(token, 64)
+		if !literalFound {
+			literal, literalFound = new(big.Float).SetString(token)
+			literal.(*big.Float).SetPrec(r.precision)
+		}
 
+		//Main parsing tree
 		switch {
-		case err == nil:
-			r.stack.Push(val)
+		//Found a literal value
+		case literalFound:
+			r.stack.Push(literal)
 
 		//Arithmetic Operators
 		case token == "+":
@@ -173,7 +194,7 @@ func (r *RPEngine) Eval(tokens []string) {
 		case token == "min":
 			r.min()
 
-		//Display Modes
+		//Calc params and display modes
 		case token == "hex":
 			r.hexDisplay()
 		case token == "dec":
@@ -182,8 +203,16 @@ func (r *RPEngine) Eval(tokens []string) {
 			r.binDisplay()
 		case token == "oct":
 			r.octDisplay()
-		case token == "stack":
+		case token == "Stack":
 			r.stackDisplay()
+		case token == "setprec":
+			r.setPrec()
+		case token == "getprec":
+			r.getPrec()
+		case token == "setdefprec":
+			r.setDefPrec()
+		case token == "getdefprec":
+			r.getDefPrec()
 
 		//Constants
 		case token == "e":
@@ -253,6 +282,7 @@ func (r *RPEngine) Eval(tokens []string) {
 		//Other operations
 		case token == "help":
 			fmt.Println("Help!")
+			r.helpCalled = true
 		case token == "exit":
 			runtime.Goexit()
 		}
@@ -261,7 +291,7 @@ func (r *RPEngine) Eval(tokens []string) {
 
 func (r *RPEngine) replExecutor(in string) {
 	r.EvalString(in)
-
+	//TODO: Updated display logic.
 	r.replPrefix = r.stack.AsHorizString() + "> "
 	//LivePrefixState.IsEnable = true
 }
@@ -272,7 +302,7 @@ func (r *RPEngine) replCompleter(d prompt.Document) []prompt.Suggest {
 		{Text: "-", Description: "Subtraction"},
 		{Text: "*", Description: "Multiplication"},
 		{Text: "/", Description: "Division"},
-		{Text: "cla", Description: "Clears stack and variables"},
+		{Text: "cla", Description: "Clears Stack and variables"},
 		{Text: "exit", Description: "Exits from the calculator"},
 	}
 	//return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
@@ -291,4 +321,34 @@ func (r *RPEngine) varFound(key string) bool {
 func (r *RPEngine) macroFound(key string) bool {
 	_, ok := r.macros[key]
 	return ok
+}
+
+func (r *RPEngine) valString(val interface{}) string {
+	switch x := val.(type) {
+	case bool:
+		return fmt.Sprintf("%t", x)
+	case *big.Int:
+		return x.Text(r.displayBase)
+	case *big.Float:
+		switch r.displayBase {
+		case 16:
+			return x.Text('x', -1)
+		default:
+			return x.Text('g', -1)
+		}
+	default:
+		return fmt.Sprintf("%v", x)
+	}
+}
+
+func (r *RPEngine) stackString() string {
+	var b strings.Builder
+	for _, val := range r.stack.Stack {
+		if r.stackDisp == "vert" {
+			_, _ = fmt.Fprint(&b, r.valString(val), "\n")
+		} else {
+			//TODO
+		}
+	}
+	return b.String()
 }
