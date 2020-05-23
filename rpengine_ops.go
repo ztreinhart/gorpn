@@ -1066,23 +1066,27 @@ func (r *RPEngine) drop() {
 }
 
 func (r *RPEngine) dropn() {
-	//TODO: doesn't work
 	n, err := r.popIntHelper()
 	if err == nil {
-		r.stack.Dropn(n)
+		for i := 0; i < n; i++ {
+			r.stack.Drop()
+		}
 	}
 }
 
 func (r *RPEngine) dup() {
-	//r.stack.Dup()
 	rawX := r.stack.Peek()
-
+	r.stack.Push(copyHelper(rawX))
 }
 
 func (r *RPEngine) dupn() {
-	n, err := r.popIntHelper()
+	n, err := r.popUintHelper()
 	if err == nil {
-		r.stack.Dupn(n)
+		//r.stack.Dupn(n)
+		buf := make([]interface{}, n)
+		for i := 0; i < n; i++ {
+			buf := append(buf, r.stack.Pop())
+		}
 	}
 }
 
