@@ -77,6 +77,8 @@ func (r *RPEngine) replCompleter(d prompt.Document) []prompt.Suggest {
 		{Text: "swap", Description: "Swap the top 2 stack items"},
 		{Text: "macro", Description: "Defines a macro, e.g. 'macro kib 1024 *'"},
 		{Text: "lsmacros", Description: "Lists currently defined macros"},
+		{Text: "rmmacro", Description: "Remove a defined macro, e.g. 'rmmacro kib'"},
+		{Text: "clm", Description: "Clears all defined macros"},
 		{Text: "x=", Description: "Assigns a variable, e.g. '1024 x='"},
 		{Text: "type", Description: "Prints type of top variable in the stack. (useful for debugging)"},
 		{Text: "help", Description: "Print the help message"},

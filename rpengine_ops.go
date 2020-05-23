@@ -15,6 +15,17 @@ import (
 //TODO: DO NOT REUSE big.Int AND big.Float pointers!
 
 //Helpers
+func copyHelper(rawX interface{}) interface{} {
+	switch x := rawX.(type) {
+	case *big.Int:
+		return new(big.Int).Set(x)
+	case *big.Float:
+		return new(big.Float).Set(x)
+	default:
+		return rawX
+	}
+}
+
 func compareHelper(rawX, rawY interface{}) (int, error) {
 	switch y := rawY.(type) {
 	case *big.Int: //Y is an integer
@@ -314,7 +325,7 @@ func (r *RPEngine) clv() {
 
 }
 
-func (r *RPEngine) mod() { //TODO: probably change this to use QuoRem as opposed to Mod. Also big.Int helper.
+func (r *RPEngine) mod() {
 	rawY := r.stack.Pop() //y
 	rawX := r.stack.Pop() //x
 	switch y := rawY.(type) {
@@ -326,14 +337,14 @@ func (r *RPEngine) mod() { //TODO: probably change this to use QuoRem as opposed
 
 		switch x := rawX.(type) {
 		case *big.Int: //Y is an integer and X is an integer
-			x = x.Mod(x, y)
-			r.stack.Push(x)
+			_, rem := new(big.Int).QuoRem(x, y, new(big.Int))
+			r.stack.Push(rem)
 			return
 		case *big.Float: //Y is an integer and X is a float
 			fmt.Println("Warning: implicit conversion from float to integer")
 			intx, _ := x.Int(nil)
-			intx = intx.Mod(intx, y)
-			r.stack.Push(intx)
+			_, rem := new(big.Int).QuoRem(intx, y, new(big.Int))
+			r.stack.Push(rem)
 			return
 		default:
 			fmt.Printf("Operation undefined between %T and %T.\n", rawX, rawY)
@@ -349,13 +360,15 @@ func (r *RPEngine) mod() { //TODO: probably change this to use QuoRem as opposed
 
 		switch x := rawX.(type) {
 		case *big.Int: //Y is a float and X is an integer
-			x = x.Mod(x, inty)
-			r.stack.Push(x)
+			_, rem := new(big.Int).QuoRem(x, inty, new(big.Int))
+			r.stack.Push(rem)
 			return
 		case *big.Float: //Y is a float and X is a float
 			intx, _ := x.Int(nil)
-			intx = intx.Mod(intx, inty)
-			r.stack.Push(intx)
+			//intx = intx.Mod(intx, inty)
+			//r.stack.Push(intx)
+			_, rem := new(big.Int).QuoRem(intx, inty, new(big.Int))
+			r.stack.Push(rem)
 			return
 		default:
 			fmt.Printf("Operation undefined between %T and %T.\n", rawX, rawY)
@@ -739,6 +752,25 @@ func (r *RPEngine) sinh() {
 	r.stack.Push(big.NewFloat(flx))
 }
 
+func (r *RPEngine) tan() {
+	rawX := r.stack.Pop()
+	var flx float64
+	switch x := rawX.(type) {
+	case *big.Int:
+		var err error
+		flx, err = strconv.ParseFloat(x.String(), 64)
+		if err != nil {
+			fmt.Println("Error parsing integer into float for hyperbolic tangent calculation.")
+		}
+	case *big.Float:
+		flx, _ = x.Float64()
+	default:
+		fmt.Printf("Operation undefined on type: %T\n ", rawX)
+	}
+	flx = math.Tan(flx)
+	r.stack.Push(big.NewFloat(flx))
+}
+
 func (r *RPEngine) tanh() {
 	rawX := r.stack.Pop()
 	var flx float64
@@ -1017,6 +1049,7 @@ func (r *RPEngine) nhs() {
 }
 
 //Stack Manipulation
+//TODO: Doesn't work
 func (r *RPEngine) pick() {
 	n, err := r.popIntHelper()
 	if err == nil {
@@ -1041,7 +1074,9 @@ func (r *RPEngine) dropn() {
 }
 
 func (r *RPEngine) dup() {
-	r.stack.Dup()
+	//r.stack.Dup()
+	rawX := r.stack.Peek()
+
 }
 
 func (r *RPEngine) dupn() {
@@ -1089,6 +1124,14 @@ func (r *RPEngine) listMacros() {
 	for key, value := range r.macros {
 		fmt.Println(key, ":\t", value)
 	}
+}
+
+func (r *RPEngine) rmMacro(macro string) {
+	delete(r.macros, macro)
+}
+
+func (r *RPEngine) clearMacros() {
+	r.macros = make(map[string]string)
 }
 
 func (r *RPEngine) runMacro(key string) {

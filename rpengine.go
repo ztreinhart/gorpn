@@ -171,6 +171,8 @@ func (r *RPEngine) Eval(tokens []string) {
 			r.sin()
 		case token == "sinh":
 			r.sinh()
+		case token == "tan":
+			r.tan()
 		case token == "tanh":
 			r.tanh()
 
@@ -181,7 +183,7 @@ func (r *RPEngine) Eval(tokens []string) {
 			r.floor()
 		case token == "round":
 			r.round()
-		case token == "integerPart":
+		case token == "ip":
 			r.integerPart()
 		case token == "fp":
 			r.floatingPart()
@@ -203,7 +205,7 @@ func (r *RPEngine) Eval(tokens []string) {
 			r.binDisplay()
 		case token == "oct":
 			r.octDisplay()
-		case token == "Stack":
+		case token == "stack":
 			r.stackDisplay()
 
 		//Constants
@@ -226,6 +228,7 @@ func (r *RPEngine) Eval(tokens []string) {
 		case token == "log":
 			r.log()
 		case token == "pow":
+			r.pow()
 
 		//Networking
 		case token == "hnl":
@@ -268,6 +271,11 @@ func (r *RPEngine) Eval(tokens []string) {
 			i = len(tokens)
 		case token == "lsmacros":
 			r.listMacros()
+		case token == "rmmacro":
+			i++
+			r.rmMacro(tokens[i])
+		case token == "clm":
+			r.clearMacros()
 		case r.varFound(token):
 			r.getVar(token)
 		case r.macroFound(token):
@@ -283,6 +291,8 @@ func (r *RPEngine) Eval(tokens []string) {
 			runtime.Goexit()
 		case token == "type":
 			fmt.Printf("Type: %T\n", r.stack.Peek())
+		default:
+			fmt.Println("Unrecognized input.")
 		}
 	}
 }
@@ -335,9 +345,9 @@ func (r *RPEngine) stackString() string {
 		}
 	} else {
 		for idx, val := range r.stack.Stack {
-			_, _ = fmt.Fprint(&b, val, "")
+			_, _ = fmt.Fprint(&b, r.valString(val), "")
 			if idx < len(r.stack.Stack)-1 {
-				_, _ = fmt.Fprint(&b, " ")
+				_, _ = fmt.Fprint(&b, "  ")
 			}
 		}
 	}
