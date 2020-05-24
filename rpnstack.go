@@ -2,9 +2,8 @@ package main
 
 import (
 	"fmt"
+	"math/big"
 )
-
-//TODO: Consider switching all 'n' arguments to uint.
 
 type RPNStack struct {
 	Stack []interface{}
@@ -61,11 +60,11 @@ func (s *RPNStack) PeekBottom() interface{} { //Returns nil if Stack empty
 	return s.Stack[0]
 }
 
-func (s *RPNStack) Pick(n int) interface{} { //Returns NaN if out of bounds
+func (s *RPNStack) Pick(n int) interface{} { //TODO: Bounds checking
 	pos := len(s.Stack) - 1 - n
 	if pos >= 0 {
 		val := s.Stack[pos]
-		s.Stack = append(s.Stack[:n], s.Stack[n+1:]...)
+		s.Stack = append(s.Stack[:pos], s.Stack[pos+1:]...)
 		return val
 	} else {
 		return nil
@@ -75,6 +74,7 @@ func (s *RPNStack) Pick(n int) interface{} { //Returns NaN if out of bounds
 func (s *RPNStack) Depth() int {
 	return len(s.Stack)
 }
+
 func (s *RPNStack) Drop() {
 	if len(s.Stack) > 0 {
 		_ = s.Pop()
@@ -109,7 +109,7 @@ func (s *RPNStack) DropBottomn(n int) {
 
 func (s *RPNStack) Dup() {
 	if len(s.Stack) > 0 {
-		s.Push(s.Peek())
+		s.Push(copyHelper(s.Peek()))
 	}
 }
 
@@ -117,11 +117,11 @@ func (s *RPNStack) Dupn(n int) { //If n >= Stack length, duplicates whole Stack
 	if n <= 0 {
 		return
 	}
-	pos := len(s.Stack) - 1 - n
-	if pos < 0 {
-		pos = 0
+	buf := make([]interface{}, 0)
+	for i := len(s.Stack) - n; i < len(s.Stack); i++ {
+		buf = append(buf, copyHelper(s.Stack[i]))
 	}
-	s.Stack = append(s.Stack, s.Stack[pos:]...)
+	s.Stack = append(s.Stack, buf...)
 }
 
 func (s *RPNStack) Roll(n int) {
@@ -155,4 +155,15 @@ func (s *RPNStack) Swap() {
 
 func (s *RPNStack) AsHorizString() string {
 	return fmt.Sprintf("%v", s.Stack)
+}
+
+func copyHelper(rawX interface{}) interface{} {
+	switch x := rawX.(type) {
+	case *big.Int:
+		return new(big.Int).Set(x)
+	case *big.Float:
+		return new(big.Float).Set(x)
+	default:
+		return rawX
+	}
 }

@@ -1,0 +1,3 @@
+macro dupdec dup --
+macro 10to1 10 9 repeat dupdec
+macro reset clr 10to1

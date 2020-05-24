@@ -15,17 +15,6 @@ import (
 //TODO: DO NOT REUSE big.Int AND big.Float pointers!
 
 //Helpers
-func copyHelper(rawX interface{}) interface{} {
-	switch x := rawX.(type) {
-	case *big.Int:
-		return new(big.Int).Set(x)
-	case *big.Float:
-		return new(big.Float).Set(x)
-	default:
-		return rawX
-	}
-}
-
 func compareHelper(rawX, rawY interface{}) (int, error) {
 	switch y := rawY.(type) {
 	case *big.Int: //Y is an integer
@@ -1053,7 +1042,7 @@ func (r *RPEngine) nhs() {
 func (r *RPEngine) pick() {
 	n, err := r.popIntHelper()
 	if err == nil {
-		r.stack.Push(r.stack.Pick(n))
+		r.stack.Push(copyHelper(r.stack.Pick(n)))
 	}
 }
 
@@ -1075,18 +1064,13 @@ func (r *RPEngine) dropn() {
 }
 
 func (r *RPEngine) dup() {
-	rawX := r.stack.Peek()
-	r.stack.Push(copyHelper(rawX))
+	r.stack.Dup()
 }
 
 func (r *RPEngine) dupn() {
-	n, err := r.popUintHelper()
+	n, err := r.popIntHelper()
 	if err == nil {
-		//r.stack.Dupn(n)
-		buf := make([]interface{}, n)
-		for i := 0; i < n; i++ {
-			buf := append(buf, r.stack.Pop())
-		}
+		r.stack.Dupn(n)
 	}
 }
 

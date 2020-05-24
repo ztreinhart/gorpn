@@ -2,9 +2,13 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 )
+
+//const rcfile = "~/.rpnrc"
+const rcfile = "rcfile"
 
 func main() {
 	//To help us make a clean exit
@@ -15,6 +19,14 @@ func main() {
 	engine.Init()
 
 	//TODO: process RC file, if it exists, on startup.
+	if _, err := os.Stat(rcfile); err == nil {
+		if rawfile, err := ioutil.ReadFile(rcfile); err == nil {
+			lines := strings.Split(string(rawfile), "\n")
+			for _, line := range lines {
+				_ = engine.EvalString(line)
+			}
+		}
+	}
 
 	//If there are command line args, process them
 	if len(os.Args[1:]) > 0 {
