@@ -18,7 +18,6 @@ func main() {
 	var engine RPEngine
 	engine.Init()
 
-	//TODO: process RC file, if it exists, on startup.
 	if _, err := os.Stat(rcfile); err == nil {
 		if rawfile, err := ioutil.ReadFile(rcfile); err == nil {
 			lines := strings.Split(string(rawfile), "\n")

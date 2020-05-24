@@ -60,9 +60,10 @@ func (s *RPNStack) PeekBottom() interface{} { //Returns nil if Stack empty
 	return s.Stack[0]
 }
 
-func (s *RPNStack) Pick(n int) interface{} { //TODO: Bounds checking
-	pos := len(s.Stack) - 1 - n
-	if pos >= 0 {
+func (s *RPNStack) Pick(n int) interface{} {
+	end := len(s.Stack) - 1
+	pos := end - n
+	if pos >= 0 && pos <= end {
 		val := s.Stack[pos]
 		s.Stack = append(s.Stack[:pos], s.Stack[pos+1:]...)
 		return val

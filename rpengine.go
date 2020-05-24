@@ -3,7 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/c-bata/go-prompt"
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 	"math/big"
+	"os"
 	"regexp"
 	"runtime"
 	"strings"
@@ -299,8 +302,10 @@ func (r *RPEngine) Eval(tokens []string) {
 
 func (r *RPEngine) replExecutor(in string) {
 	r.EvalString(in)
-	//TODO: Updated display logic.
 	//r.replPrefix = r.stack.AsHorizString() + "> "
+	if r.stackDisp == "vert" {
+		r.vertStackDisp()
+	}
 	r.replPrefix = r.buildREPLPrefix()
 	//LivePrefixState.IsEnable = true
 }
@@ -340,9 +345,10 @@ func (r *RPEngine) valString(val interface{}) string {
 func (r *RPEngine) stackString() string {
 	var b strings.Builder
 	if r.stackDisp == "vert" {
-		for i := len(r.stack.Stack) - 1; i >= 0; i-- {
-			_, _ = fmt.Fprint(&b, r.valString(r.stack.Stack[i]), "\n")
-		}
+		//for i := len(r.stack.Stack) - 1; i >= 0; i-- {
+		//	_, _ = fmt.Fprint(&b, r.valString(r.stack.Stack[i]), "\n")
+		//}
+		return ""
 	} else {
 		for idx, val := range r.stack.Stack {
 			_, _ = fmt.Fprint(&b, r.valString(val), "")
@@ -353,6 +359,28 @@ func (r *RPEngine) stackString() string {
 	}
 
 	return b.String()
+}
+
+func (r *RPEngine) vertStackDisp() {
+	stackRows := make([]table.Row, 0)
+	end := len(r.stack.Stack) - 1
+	for i := end; i >= 0; i-- {
+		stackRows = append(stackRows, table.Row{end - i, r.valString(r.stack.Stack[i])})
+	}
+
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+	t.AppendRow(table.Row{"Stack", "Stack"}, table.RowConfig{AutoMerge: true})
+	t.AppendSeparator()
+	t.AppendRow(table.Row{"index", "value"})
+	t.AppendSeparator()
+	t.AppendRows(stackRows)
+	t.SetColumnConfigs([]table.ColumnConfig{
+		{Number: 1, AutoMerge: true, Align: text.AlignCenter, AlignFooter: text.AlignCenter, AlignHeader: text.AlignCenter},
+		{Number: 2, AutoMerge: true, Align: text.AlignCenter, AlignFooter: text.AlignCenter, AlignHeader: text.AlignCenter},
+	})
+	t.SetStyle(table.StyleLight)
+	t.Render()
 }
 
 func (r *RPEngine) varsString() string {
@@ -371,9 +399,9 @@ func (r *RPEngine) varsString() string {
 func (r *RPEngine) buildREPLPrefix() string {
 	var b strings.Builder
 	if r.stackDisp == "vert" {
-		_, _ = fmt.Fprint(&b, r.stackString())
+		//_, _ = fmt.Fprint(&b, r.stackString())
 		_, _ = fmt.Fprint(&b, r.varsString())
-		_, _ = fmt.Fprint(&b, " >")
+		_, _ = fmt.Fprint(&b, " >>> ")
 	} else {
 		_, _ = fmt.Fprint(&b, r.varsString())
 		_, _ = fmt.Fprint(&b, "[ ", r.stackString(), " ] > ")

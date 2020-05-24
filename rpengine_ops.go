@@ -49,10 +49,11 @@ func compareHelper(rawX, rawY interface{}) (int, error) {
 	}
 }
 
-//TODO: func (r *RPEngine) popFloat64Helper() (float64, error) {}
-
 func (r *RPEngine) popInt64Helper() (int64, error) {
 	rawN := r.stack.Pop()
+	if rawN == nil {
+		return 0, errors.New("Stack empty.")
+	}
 	switch n := rawN.(type) {
 	case *big.Int:
 		return n.Int64(), nil
@@ -89,6 +90,9 @@ func (r *RPEngine) popUint32Helper() (uint32, error) {
 
 func (r *RPEngine) popFloatHelper() (float64, error) {
 	rawX := r.stack.Pop()
+	if rawX == nil {
+		return math.NaN(), errors.New("Stack empty.")
+	}
 	var floatx float64
 	switch x := rawX.(type) {
 	case *big.Int:
@@ -104,6 +108,9 @@ func (r *RPEngine) popFloatHelper() (float64, error) {
 
 func (r *RPEngine) popBigIntHelper() (*big.Int, error) {
 	rawX := r.stack.Pop()
+	if rawX == nil {
+		return nil, errors.New("Stack empty.")
+	}
 	switch x := rawX.(type) {
 	case *big.Int:
 		return x, nil
@@ -115,6 +122,20 @@ func (r *RPEngine) popBigIntHelper() (*big.Int, error) {
 		fmt.Printf("Operation undefined with operand of type %T\n", rawX)
 		return nil, errors.New("Unsupported type")
 	}
+}
+
+func (r *RPEngine) popBoolHelper() (bool, error) {
+	rawX := r.stack.Pop()
+	if rawX == nil {
+		return false, errors.New("Stack empty.")
+	}
+	x, ok := rawX.(bool)
+	if !ok {
+		fmt.Println("Operation undefined with operand of type %T\n")
+		r.stack.Push(rawX)
+		return false, errors.New("Unsupported type.")
+	}
+	return x, nil
 }
 
 func (r *RPEngine) pushFloatOrInt(z *big.Float) {
@@ -129,7 +150,15 @@ func (r *RPEngine) pushFloatOrInt(z *big.Float) {
 //Arithmetic Operators
 func (r *RPEngine) plus() {
 	rawY := r.stack.Pop()
+	if rawY == nil {
+		return
+	}
 	rawX := r.stack.Pop()
+	if rawX == nil {
+		r.stack.Push(rawY)
+		return
+	}
+
 	switch y := rawY.(type) {
 	case *big.Int: //Y is an integer
 		switch x := rawX.(type) {
@@ -176,7 +205,15 @@ func (r *RPEngine) plus() {
 
 func (r *RPEngine) minus() {
 	rawY := r.stack.Pop()
+	if rawY == nil {
+		return
+	}
 	rawX := r.stack.Pop()
+	if rawX == nil {
+		r.stack.Push(rawY)
+		return
+	}
+
 	switch y := rawY.(type) {
 	case *big.Int:
 		switch x := rawX.(type) {
@@ -215,7 +252,15 @@ func (r *RPEngine) minus() {
 
 func (r *RPEngine) multiply() {
 	rawY := r.stack.Pop()
+	if rawY == nil {
+		return
+	}
 	rawX := r.stack.Pop()
+	if rawX == nil {
+		r.stack.Push(rawY)
+		return
+	}
+
 	switch y := rawY.(type) {
 	case *big.Int:
 		switch x := rawX.(type) {
@@ -261,11 +306,24 @@ func (r *RPEngine) multiply() {
 	r.stack.Push(rawY)
 }
 
-func (r *RPEngine) divide() { //TODO: Add checks for division by zero
+func (r *RPEngine) divide() {
 	rawY := r.stack.Pop()
+	if rawY == nil {
+		return
+	}
 	rawX := r.stack.Pop()
+	if rawX == nil {
+		r.stack.Push(rawY)
+		return
+	}
+
 	switch y := rawY.(type) {
 	case *big.Int:
+		if y == big.NewInt(0) {
+			fmt.Println("Undefined: Division by zero!")
+			break
+		}
+
 		switch x := rawX.(type) {
 		case *big.Int:
 			x = x.Div(x, y)
@@ -280,6 +338,11 @@ func (r *RPEngine) divide() { //TODO: Add checks for division by zero
 			fmt.Printf("Operation undefined between %T and %T.\n", rawX, rawY)
 		}
 	case *big.Float:
+		if y == big.NewFloat(0) {
+			fmt.Println("Undefined: Division by zero!")
+			break
+		}
+
 		switch x := rawX.(type) {
 		case *big.Int:
 			flx := new(big.Float).SetInt(x)
@@ -1038,11 +1101,14 @@ func (r *RPEngine) nhs() {
 }
 
 //Stack Manipulation
-//TODO: Doesn't work
 func (r *RPEngine) pick() {
 	n, err := r.popIntHelper()
 	if err == nil {
-		r.stack.Push(copyHelper(r.stack.Pick(n)))
+		rawX := r.stack.Pick(n)
+		if rawX != nil {
+			r.stack.Push(copyHelper(rawX))
+		}
+
 	}
 }
 
