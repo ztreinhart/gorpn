@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -28,14 +30,34 @@ func main() {
 		}
 	}
 
-	//If there are command line args, process them
-	if len(os.Args[1:]) > 0 {
+	//Check on the standard input
+	info, err := os.Stdin.Stat()
+	if err != nil {
+		panic(err)
+	}
+
+	if info.Mode()&os.ModeNamedPipe != 0 { //If we have a pipe input
+		reader := bufio.NewReader(os.Stdin)
+		var contents []rune
+		for {
+			input, _, err := reader.ReadRune()
+			if err != nil && err == io.EOF {
+				break
+			}
+			contents = append(contents, input)
+		}
+
+		contentStr := string(contents)
+		fmt.Println(engine.EvalString(contentStr))
+
+	} else if len(os.Args[1:]) > 0 { //If we aren't on a pipe, but we have command line arguments
 		if strings.ToLower(os.Args[1]) == "help" {
 			cliHelp()
 		} else {
 			argStr := strings.Join(os.Args[1:], " ")
-			fmt.Print(engine.EvalString(argStr))
+			fmt.Println(engine.EvalString(argStr))
 		}
+
 	} else { //Otherwise run the REPL
 		engine.InitREPL()
 		engine.RunREPL()
