@@ -226,6 +226,7 @@ func (r *RPEngine) replCompleter(d prompt.Document) []prompt.Suggest {
 		{Text: "type", Description: "Prints type of top variable in the stack. (useful for debugging)"},
 		{Text: "help", Description: "Print the help message"},
 		{Text: "exit", Description: "Exit the calculator"},
+		{Text: "quit", Description: "Exit the calculator"},
 	}
 	//return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
 	return prompt.FilterContains(s, d.GetWordBeforeCursor(), true)

@@ -9,8 +9,9 @@ import (
 	"strings"
 )
 
-//const rcfile = "~/.gorpnrc"
-const rcfile = "rcfile"
+const rcfile = "~/.gorpnrc"
+
+//const rcfile = "rcfile"
 
 const helpStr = `
 goRPN
@@ -67,7 +68,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
 
 	if info.Mode()&os.ModeNamedPipe != 0 { //If we have a pipe input
 		reader := bufio.NewReader(os.Stdin)
