@@ -140,6 +140,7 @@ const REPLHelpStr = `
  ===============================
 
     help       Print the help message
+	type	   Gets the data type of the element at top of stack
     exit       Exit the calculator
     quit       Exit the calculator
 `

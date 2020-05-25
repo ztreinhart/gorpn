@@ -58,10 +58,12 @@ func (r *RPEngine) EvalString(input string) string {
 	tokens := strings.Split(input, " ")
 	r.Eval(tokens)
 
-	if r.helpCalled {
+	res, err := r.stack.Peek()
+	if err != nil || r.helpCalled {
 		return ""
 	}
-	return r.valString(r.stack.Peek())
+
+	return r.valString(res)
 }
 
 func (r *RPEngine) Eval(tokens []string) {
@@ -293,7 +295,8 @@ func (r *RPEngine) Eval(tokens []string) {
 		case token == "quit":
 			runtime.Goexit()
 		case token == "type":
-			fmt.Printf("Type: %T\n", r.stack.Peek())
+			el, _ := r.stack.Peek()
+			fmt.Printf("Type: %T\n", el)
 		default:
 			fmt.Println("Unrecognized input.")
 		}

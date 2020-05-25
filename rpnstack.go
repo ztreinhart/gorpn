@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"errors"
 	"math/big"
 )
 
@@ -21,55 +21,53 @@ func (s *RPNStack) Push(val interface{}) {
 	s.Stack = append(s.Stack, val)
 }
 
-func (s *RPNStack) Pop() interface{} { //Returns nil if Stack empty
+func (s *RPNStack) Pop() (interface{}, error) { //Returns nil if stack empty
 	if len(s.Stack) < 1 {
-		return nil
+		return nil, errors.New("stack empty")
 	}
 	end := len(s.Stack) - 1
 	val := s.Stack[end]
 	s.Stack = s.Stack[:end]
-	return val
+	return val, nil
 }
 
-func (s *RPNStack) Peek() interface{} { //Returns nil if Stack empty
+func (s *RPNStack) Peek() (interface{}, error) { //Returns nil if stack empty
 	end := len(s.Stack) - 1
-	if end >= 0 {
-		return s.Stack[end]
-	} else {
-		return nil
+	if end < 0 {
+		return nil, errors.New("stack empty")
 	}
+	return s.Stack[end], nil
 }
 
 func (s *RPNStack) PushBottom(val interface{}) {
 	s.Stack = append([]interface{}{val}, s.Stack...)
 }
 
-func (s *RPNStack) PopBottom() interface{} { //Returns nil if Stack empty
+func (s *RPNStack) PopBottom() (interface{}, error) { //Returns nil if stack empty
 	if len(s.Stack) < 1 {
-		return nil
+		return nil, errors.New("stack empty")
 	}
 	val := s.Stack[0]
 	s.Stack = s.Stack[1:]
-	return val
+	return val, nil
 }
 
-func (s *RPNStack) PeekBottom() interface{} { //Returns nil if Stack empty
+func (s *RPNStack) PeekBottom() (interface{}, error) { //Returns nil if stack empty
 	if len(s.Stack) < 1 {
-		return nil
+		return nil, errors.New("stack empty")
 	}
-	return s.Stack[0]
+	return s.Stack[0], nil
 }
 
-func (s *RPNStack) Pick(n int) interface{} {
+func (s *RPNStack) Pick(n int) (interface{}, error) {
 	end := len(s.Stack) - 1
 	pos := end - n
 	if pos >= 0 && pos <= end {
 		val := s.Stack[pos]
 		s.Stack = append(s.Stack[:pos], s.Stack[pos+1:]...)
-		return val
-	} else {
-		return nil
+		return val, nil
 	}
+	return nil, errors.New("pick index out of bounds")
 }
 
 func (s *RPNStack) Depth() int {
@@ -78,13 +76,13 @@ func (s *RPNStack) Depth() int {
 
 func (s *RPNStack) Drop() {
 	if len(s.Stack) > 0 {
-		_ = s.Pop()
+		_, _ = s.Pop()
 	}
 }
 
 func (s *RPNStack) DropBottom() {
 	if len(s.Stack) > 0 {
-		_ = s.PopBottom()
+		_, _ = s.PopBottom()
 	}
 }
 
@@ -109,8 +107,9 @@ func (s *RPNStack) DropBottomn(n int) {
 }
 
 func (s *RPNStack) Dup() {
-	if len(s.Stack) > 0 {
-		s.Push(copyHelper(s.Peek()))
+	item, err := s.Peek()
+	if err == nil {
+		s.Push(copyHelper(item))
 	}
 }
 
@@ -131,7 +130,10 @@ func (s *RPNStack) Roll(n int) {
 		return
 	}
 	for i := 0; i < n; i++ {
-		s.PushBottom(s.Pop())
+		item, err := s.Pop()
+		if err == nil {
+			s.PushBottom(item)
+		}
 	}
 }
 
@@ -141,22 +143,34 @@ func (s *RPNStack) Rolld(n int) {
 		return
 	}
 	for i := 0; i < n; i++ {
-		s.Push(s.PopBottom())
+		item, err := s.PopBottom()
+		if err == nil {
+			s.Push(item)
+		}
 	}
 }
 
 func (s *RPNStack) Swap() {
 	if len(s.Stack) > 1 {
-		first := s.Pop()
-		second := s.Pop()
+		first, err1 := s.Pop()
+		if err1 != nil {
+			return
+		}
+
+		second, err2 := s.Pop()
+		if err2 != nil {
+			s.Push(first)
+			return
+		}
+
 		s.Push(first)
 		s.Push(second)
 	}
 }
 
-func (s *RPNStack) AsHorizString() string {
-	return fmt.Sprintf("%v", s.Stack)
-}
+//func (s *RPNStack) AsHorizString() string {
+//	return fmt.Sprintf("%v", s.Stack)
+//}
 
 func copyHelper(rawX interface{}) interface{} {
 	switch x := rawX.(type) {
