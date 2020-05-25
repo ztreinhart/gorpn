@@ -1,6 +1,148 @@
 package main
 
-import "github.com/c-bata/go-prompt"
+import (
+	"fmt"
+	"github.com/c-bata/go-prompt"
+)
+
+const REPLHelpStr = `
+ goRPN Command Reference
+ ===============================
+ goRPN is a full featured console RPN calculator. It provides arbitrary
+ precision integer and floating point arithmetic where feasible. The following
+ commands are supported, with max precision noted in parentheses where
+ applicable.
+
+ Arithmetic Operators
+ ===============================
+
+    +          Add        (arbitrary)
+    -          Subtract   (arbitrary)
+    *          Multiply   (arbitrary)
+    /          Divide     (arbitrary)
+    cla        Clear the stack and variables
+    clr        Clear the stack
+    clv        Clear the variables
+    %          Modulus    (arbitrary)
+    ++         Increment  (arbitrary)
+    --         Decrement  (arbitrary)
+
+ Bitwise Operators
+ ===============================
+
+    &          Bitwise AND
+    |          Bitwise OR
+    ^          Bitwise XOR
+    ~          Bitwise NOT
+    <<         Bitwise shift left
+    >>         Bitwise shift right
+
+ Boolean Operators
+ ===============================
+
+    !          Boolean NOT
+    &&         Boolean AND
+    ||         Boolean OR
+    ^^         Boolean XOR
+
+ Comparison Operators
+ ===============================
+
+    !=         Not equal to
+    <          Less than
+    <=         Less than or equal to
+    ==         Equal to
+    >          Greater than
+    >=         Greater than or equal to
+
+ Trigonometric Functions
+ ===============================
+
+    acos       Arc Cosine         (64-bit floating point)
+    asin       Arc Sine           (64-bit floating point)
+    atan       Arc Tangent        (64-bit floating point)
+    cos        Cosine             (64-bit floating point)
+    cosh       Hyperbolic Cosine  (64-bit floating point)
+    sin        Sine               (64-bit floating point)
+    sinh       Hyperbolic Sine    (64-bit floating point)
+    tanh       Hyperbolic tangent (64-bit floating point)
+
+ Numeric Utilities
+ ===============================
+
+    ceil       Ceiling            (64-bit floating point)
+    floor      Floor              (64-bit floating point)
+    round      Round              (64-bit floating point)
+    ip         Integer part       (64-bit floating point)
+    fp         Floating part      (64-bit floating point)
+    sign       Push -1, 0, or 0 depending on the sign
+    abs        Absolute value     (arbitrary)
+    max        Max
+    min        Min
+ 
+ Display Modes
+ ===============================
+
+    hex        Switch display mode to hexadecimal
+    dec        Switch display mode to decimal (default)
+    bin        Switch display mode to binary
+    oct        Switch display mode to octal
+
+ Constants
+ ===============================
+
+    e          Push e                     (64-bit floating point)
+    pi         Push Pi                    (64-bit floating point)
+    rand       Generate a random number   (integer)
+
+ Mathematic Functions
+ ===============================
+
+    exp        Exponentiation             (64-bit floating point)
+    fact       Factorial                  (arbitrary)
+    sqrt       Square Root                (arbitrary)
+    ln         Natural Logarithm          (64-bit floating point)
+    log        Logarithm                  (64-bit floating point)
+    pow        Raise a number to a power  (64-bit floating point)
+
+ Networking
+ ===============================
+
+    hnl        Host to network long       (32-bit unsigned integer)
+    hns        Host to network short      (16-bit unsigned integer)
+    nhl        Network to host long       (32-bit unsigned integer)
+    nhs        Network to host short      (16-bit unsigned integer)
+
+ Stack Manipulation
+ ===============================
+
+    pick       Pick the -n'th item from the stack
+    repeat     Repeat an operation n times, e.g. '3 repeat +'
+    depth      Push the current stack depth
+    drop       Drops the top item from the stack
+    dropn      Drops n items from the stack
+    dup        Duplicates the top stack item
+    dupn       Duplicates the top n stack items in order
+    roll       Roll the stack upwards by n
+    rolld      Roll the stack downwards by n
+    stack      Toggles stack display from horizontal to vertical
+    swap       Swap the top 2 stack items
+
+ Macros and Variables
+ ===============================
+
+    macro      Defines a macro, e.g. 'macro kib 1024 *'
+    lsmacros   List currently defined macros
+    clm        Clear macros
+    x=         Assigns a variable, e.g. '1024 x='
+
+ Other
+ ===============================
+
+    help       Print the help message
+    exit       Exit the calculator
+    quit       Exit the calculator
+`
 
 func (r *RPEngine) replCompleter(d prompt.Document) []prompt.Suggest {
 	s := []prompt.Suggest{
@@ -86,4 +228,8 @@ func (r *RPEngine) replCompleter(d prompt.Document) []prompt.Suggest {
 	}
 	//return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
 	return prompt.FilterContains(s, d.GetWordBeforeCursor(), true)
+}
+
+func (r *RPEngine) replHelp() {
+	fmt.Print(REPLHelpStr)
 }

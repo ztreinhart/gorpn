@@ -286,7 +286,7 @@ func (r *RPEngine) Eval(tokens []string) {
 
 		//Other operations
 		case token == "help":
-			fmt.Println("Help!")
+			r.replHelp()
 			r.helpCalled = true
 		case token == "exit":
 			runtime.Goexit()

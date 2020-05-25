@@ -12,8 +12,6 @@ import (
 	"unsafe"
 )
 
-//TODO: DO NOT REUSE big.Int AND big.Float pointers!
-
 //Helpers
 func compareHelper(rawX, rawY interface{}) (int, error) {
 	switch y := rawY.(type) {
