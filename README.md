@@ -1,5 +1,8 @@
 # gorpn
 Command line RPN calculator implemented in Go.
+It has all the calculator features you'd expect, along with some
+extras, such as live stack display, definable macros, command
+history, tab completion, online help, etc. 
 
 # Building
 On a system with a recent version of Go installed:
